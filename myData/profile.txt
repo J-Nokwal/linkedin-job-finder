@@ -1,0 +1,17 @@
+# Your LinkedIn profile information
+# Fill in the following:
+
+# Your full name
+NAME=Jagrit Nokwal
+
+# Your professional headline/title
+HEADLINE=A Full Stack Software Developer based in Patiala, Punjab, India, with strong experience in building scalable, production-ready applications across web, mobile, and cloud platforms. I hold a Bachelor’s degree in Computer Science from Thapar Institute of Engineering & Technology, Patiala (2019–2023), and have been actively working in the software industry since my internship days, growing into a full-time Full Stack Developer role.
+
+# Your key skills (comma-separated)
+SKILLS= Technical Skills, Programming Languages, Go (Golang), Python, JavaScript, Dart, Frontend Technologies, React JS, Next JS, HTML5, CSS3, Mobile Development, Flutter (Cross-platform Android & iOS), Backend & Cloud, AWS Lambda, DynamoDB, Serverless Architecture, Docker, Firebase, Databases, SQL, NoSQL (DynamoDB), Other Skills
+
+# Your years of experience
+EXPERIENCE_YEARS=2 Years 3 months
+
+# A brief summary of your professional background
+SUMMARY= 

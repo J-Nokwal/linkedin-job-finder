@@ -1,0 +1,151 @@
+About Me – Jagrit Nokwal
+I am Jagrit Nokwal, a Full Stack Software Developer based in Nabha, India, with strong experience in building scalable, production-ready applications across web, mobile, and cloud platforms. I hold a Bachelor’s degree in Computer Science from Thapar Institute of Engineering & Technology, Patiala (2019–2023), and have been actively working in the software industry since my internship days, growing into a full-time Full Stack Developer role.
+I specialize in Golang, Flutter, React, Next.js, AWS, and serverless cloud architecture, and I enjoy building systems from scratch — from designing backend infrastructure to deploying user-facing mobile and web applications. My approach to engineering combines performance, scalability, clean architecture, and business-focused problem solving.
+FrontEnd To Backend Percentage  : 60% to 40%
+Professional Experience
+Full Stack Developer – Pushkal Technologies (July 2023 – October 2026)
+At Pushkal Technologies, I worked as a Full Stack Developer leading backend systems, cloud infrastructure, and cross-platform application development.
+Project: OBDPulse (Oct 2024 – Oct 2025)
+OBDPulse is a vehicle diagnostics and monitoring platform built around OBD (On-Board Diagnostics) devices.
+In this project:
+I designed and implemented backend infrastructure using AWS Lambda, DynamoDB, and Golang.
+Architected scalable, serverless APIs to handle real-time vehicle diagnostic data.
+Built a cross-platform Flutter application that connects to OBD devices via Bluetooth.
+Implemented multi-language support for global accessibility.
+Ensured secure communication, optimized performance, and scalable cloud architecture.
+This project strengthened my expertise in:
+Serverless architecture
+Real-time device communication
+Mobile + Cloud integration
+Performance optimization
+Scalable backend design
+Project: Pushkal App (July 2023 – September 2025)
+The Pushkal App is a large-scale spiritual and devotional platform serving users in multiple languages.
+My responsibilities included:
+Designing and implementing backend systems for user-facing features.
+Building a Flutter-based cross-platform mobile application.
+Supporting 8+ languages for broader accessibility.
+Developing backend systems for temple administrators.
+Creating a super admin dashboard for centralized control.
+Managing scalable cloud deployment and database architecture.
+This project improved my experience in:
+Multi-language architecture
+Admin panel design
+Role-based access systems
+Content management systems
+User engagement workflows
+Flutter Intern – Carpm, Gurugram (Jan 2021 – June 2022)
+During my internship, I worked on Garagebook, a Flutter-based application designed for garage owners.
+Key contributions:
+Developed job operations and scheduling modules.
+Built accounting and financial tracking features.
+Designed customer management workflows.
+Integrated inventory control systems.
+Helped streamline automotive garage operations.
+This early experience gave me strong foundations in:
+Product thinking
+Real-world business software
+Cross-platform mobile development
+Client requirement translation into technical systems
+Major Projects
+Pretty Healthy Foundation – Grant-Ready Nonprofit Platform
+I developed a full-stack, grant-optimized web platform serving as the digital presence of the foundation.
+Highlights:
+Built scalable CMS-driven architecture.
+Integrated Stripe-based secure donation workflows.
+Implemented server-side validation and CRM-ready forms.
+Ensured WCAG 2.1 AA accessibility compliance.
+Optimized performance and SEO.
+Integrated Google Analytics 4 for impact tracking.
+This project demonstrates my ability to build:
+Production-grade web systems
+Secure financial workflows
+SEO-optimized public platforms
+Data-driven reporting systems
+Ex-Paper Analysis – AI-Based Exam Analysis Tool
+This was an AI-powered system that:
+Processes previous year exam papers.
+Identifies high-frequency topics.
+Generates priority-based study plans.
+Uses Masked R-CNN for question segmentation.
+Applies NLP for content correlation.
+This project reflects my interest in:
+Machine learning
+NLP
+AI-powered automation
+Educational technology
+Guess The Logo – gRPC-Based Game Backend
+A Golang backend using gRPC:
+Implemented secure server-side game logic.
+Handled scoring and validation entirely on backend.
+Designed efficient client-server architecture.
+This strengthened my skills in:
+gRPC
+Secure backend validation
+Scalable multiplayer logic
+Go concurrency
+Technical Skills
+Programming Languages
+Go (Golang)
+Python
+JavaScript
+Dart
+Frontend Technologies
+React JS
+Next JS
+HTML5
+CSS3
+Mobile Development
+Flutter (Cross-platform Android & iOS)
+Backend & Cloud
+AWS Lambda
+DynamoDB
+Serverless Architecture
+Docker
+Firebase
+Databases
+SQL
+NoSQL (DynamoDB)
+Other Skills
+Data Structures & Algorithms
+Linux OS
+Machine Learning fundamentals
+Figma (UI collaboration)
+Work Philosophy
+I enjoy building systems from scratch — from designing database schemas and backend APIs to deploying scalable cloud infrastructure and user-friendly applications.
+My engineering strengths include:
+Writing clean, modular, maintainable code
+Designing scalable backend systems
+Understanding business logic deeply
+Building multilingual applications
+Performance optimization
+Secure architecture design
+Real-world production deployments
+I am comfortable working independently or in a collaborative team environment and enjoy solving complex technical challenges that require architectural thinking.
+Locality & Work Availability
+I am currently based in Nabha, India.
+I am open to working across:
+All major cities in India
+Delhi NCR
+Chandigarh
+All cities in Haryana
+All cities in Punjab
+Remote roles across India
+I am flexible for relocation and open to hybrid or on-site opportunities in:
+Gurugram
+Noida
+Delhi
+Chandigarh
+Mohali
+Panchkula
+Ludhiana
+Patiala
+Ambala
+Bahadurgarh
+Jaipur
+Bangalore
+Hyderabad
+Pune
+Mumbai
+I am available for Full-time roles, Backend roles (Golang), Full Stack roles, Flutter roles, and Cloud-based development roles.
+Jagrit Nokwal

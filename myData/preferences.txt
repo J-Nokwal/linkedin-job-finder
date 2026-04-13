@@ -1,0 +1,19 @@
+# Your job preferences
+
+# Preferred location (city, country, or "Remote")
+LOCATION=India
+
+# Minimum acceptable salary (e.g., "80000 USD" or "leave empty for any")
+SALARY_MIN=800000 INR
+
+# Work mode preference: remote / onsite / hybrid
+WORK_MODE=remote / onsite / hybrid
+
+# Preferred job titles/roles (comma-separated)
+PREFERRED_ROLES=Next.js Developer, Flutter Developer, Golang Developer, React Developer,  Front End Developer, Full Stack Developer, Web Developer, Nodejs Developer
+
+# Any other preferences (benefits, company size, etc.)
+OTHER_PREFERENCES=
+
+# Bad words to avoid (comma-separated)
+BAD_WORDS=  React Native, US Citizen, USA Citizen, No C2C, No Corp2Corp, .NET, Embedded Programming, PHP, Ruby, CNC, Trainer, Teacher, Instructor,

@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/client-generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Application {
+  id                      String   @id @default(uuid())
+  postText                String
+  authorName              String?
+  authorTitle             String?
+  postUrl                 String?
+  datePosted              DateTime?
+  likesCount              Int      @default(0)
+  source                  String?
+  externalUrls            String?
+  linkedinJobUrls         String?
+  linkedinProfileUrls     String?
+  hashtagsInText          String?
+  scrapedAt               DateTime
+  activityUrn             String?
+  postKind                String?
+  jobRelevance            Int?
+  isFit                   Boolean  @default(false)
+  fitScore                Int?
+  fitReason               String?
+  roleDetected            String?
+  companyDetected         String?
+  locationDetected        String?
+  employmentType          String?
+  seniority               String?
+  salaryOrCompMentioned   String?
+  requirements            String?
+  requirementsNiceToHave  String?
+  skillsMatched           String?
+  skillsMissing           String?
+  redFlags                String?
+  nextStepForCandidate    String?
+  action                  String?
+  isViewed                Boolean  @default(false)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([datePosted])
+  @@index([isViewed])
+  @@index([companyDetected])
+}
+
+model ApplicationQueue {
+  id           String   @id @default(uuid())
+  payload      Json
+  postText     String
+  scrapedAt    DateTime
+  source       String?
+  postUrl      String?
+  status       String   @default("pending")
+  attemptCount Int      @default(0)
+  workerId     String?
+  lockedAt     DateTime?
+  processedAt  DateTime?
+  appId        String?
+  errorMessage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status])
+  @@index([scrapedAt])
+  @@index([workerId])
+}
