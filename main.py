@@ -98,7 +98,7 @@ def _job_relevance(job: dict) -> int:
         return 0
 
 
-def _process_queue_item(analyzer: JobAnalyzer, queue_item: dict, min_rel: int) -> dict:
+def _process_queue_item(analyzer: JobAnalyzer, queue_item: dict, min_rel: int) -> None:
     try:
         payload = queue_item.get("payload") or {}
         # Handle case where payload is a JSON string instead of dict
@@ -109,7 +109,8 @@ def _process_queue_item(analyzer: JobAnalyzer, queue_item: dict, min_rel: int) -
         raw_post = {}
 
     try:
-        result = analyzer.analyze_post(raw_post)
+        analyzed = analyzer.analyze_all([raw_post])
+        result = analyzed[0]
         _complete_queue_job(queue_item["id"], result)
 
         if result.get("is_fit") and _job_relevance(result) >= min_rel:
@@ -123,17 +124,6 @@ def _process_queue_item(analyzer: JobAnalyzer, queue_item: dict, min_rel: int) -
     except Exception as e:
         print(f"[MAIN] Error analyzing queue item {queue_item['id']}: {e}")
 
-    return result
-
-
-def _fetch_and_enqueue(scraper: LinkedInScraper) -> int:
-    posts = scraper.run()
-    if not posts:
-        print("[MAIN] Scraper found no new posts.")
-        return 0
-    _push_raw_jobs_to_nextjs_queue(posts)
-    return len(posts)
-
 
 def _process_queue_loop(scraper: LinkedInScraper, analyzer: JobAnalyzer, min_rel: int) -> None:
     worker_id = f"worker-{uuid.uuid4().hex[:8]}"
@@ -145,7 +135,6 @@ def _process_queue_loop(scraper: LinkedInScraper, analyzer: JobAnalyzer, min_rel
         if not queue_items:
             print("[MAIN] Queue empty; sleeping 10 seconds and fetching new posts")
             time.sleep(10)
-            _fetch_and_enqueue(scraper)
             continue
 
         item = queue_items[0]
@@ -239,45 +228,52 @@ def main():
     scraper = LinkedInScraper()
 
     try:
-        posts = scraper.run()
+        all_posts = []
+        seen_keys = set()
+        for post in scraper.run():
+            key = scraper._post_dedupe_key(post)
+            if key not in seen_keys:
+                seen_keys.add(key)
+                all_posts.append(post)
+                if config.NEXTJS_API_URL:
+                    _push_raw_jobs_to_nextjs_queue([post])
     except Exception as e:
         print(f"\n[MAIN] FATAL ERROR in scraper: {e}")
         sys.exit(1)
 
-    if not posts:
+    if not all_posts:
         print("\n[MAIN] No posts found. Check your login and try again.")
         sys.exit(0)
 
-    print(f"\n[MAIN] Collected {len(posts)} posts")
+    print(f"\n[MAIN] Collected {len(all_posts)} posts")
     results_file = config.get_results_filename()
     print(f"\n[MAIN] Saving raw captures to {results_file}")
 
     try:
         with open(results_file, "w") as f:
-            json.dump(posts, f, indent=2)
+            json.dump(all_posts, f, indent=2)
         print("[MAIN] Raw captures saved successfully")
     except Exception as e:
         print(f"[MAIN] ERROR saving raw captures: {e}")
 
     if config.NEXTJS_API_URL:
-        _push_raw_jobs_to_nextjs_queue(posts)
         analyzer = JobAnalyzer(profile)
         print("[MAIN] Starting queue-based analysis loop in background (non-blocking)")
         # Run queue processor in background
         queue_thread = threading.Thread(
             target=_process_queue_loop,
             args=(scraper, analyzer, min_rel),
-            daemon=True,
+            daemon=False,
         )
         queue_thread.start()
-        print("[MAIN] Queue processor running in background thread")
-        return
+        print("[MAIN] Queue processor running continuously")
+        queue_thread.join()
 
     print("\n[MAIN] Starting AI analysis...")
     analyzer = JobAnalyzer(profile)
 
     try:
-        analyzed_jobs = analyzer.analyze_all(posts)
+        analyzed_jobs = analyzer.analyze_all(all_posts)
     except Exception as e:
         print(f"\n[MAIN] FATAL ERROR in analyzer: {e}")
         sys.exit(1)

@@ -8,7 +8,7 @@ import urllib.request
 from urllib.parse import quote, urlparse
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Generator
 
 # region agent log
 _PROJECT_ROOT = Path(__file__).resolve().parent
@@ -1008,10 +1008,9 @@ class LinkedInScraper:
             return f"urn:{u}"
         return f"{post.get('author_name', '')}|{(post.get('post_text') or '')[:220]}"
 
-    def scrape_feed(self) -> List[Dict[str, Any]]:
+    def scrape_feed(self) -> Generator[Dict[str, Any], None, None]:
         """Scrape posts from LinkedIn feed."""
         print("[SCRAPER] Starting feed scrape...")
-        posts = []
 
         try:
             # region agent log
@@ -1116,13 +1115,8 @@ class LinkedInScraper:
                         f"(feed pass {scroll_num}/{config.FEED_SCROLL_COUNT}): {len(articles)}"
                     )
 
-                    seen_feed_keys: set = set()
-                    for p in posts:
-                        seen_feed_keys.add(self._post_dedupe_key(p))
-
                     n_empty = 0
                     n_kw_skip = 0
-                    n_dedupe_skip = 0
                     n_added = 0
 
                     for article in articles:
@@ -1142,12 +1136,7 @@ class LinkedInScraper:
                             post_data = self._build_post_record(
                                 article, "feed", post_text
                             )
-                            key = self._post_dedupe_key(post_data)
-                            if key in seen_feed_keys:
-                                n_dedupe_skip += 1
-                                continue
-                            seen_feed_keys.add(key)
-                            posts.append(post_data)
+                            yield post_data
                             n_added += 1
                             label = (
                                 "hiring signal"
@@ -1177,7 +1166,6 @@ class LinkedInScraper:
                             "articles": len(articles),
                             "n_empty_text": n_empty,
                             "n_keyword_skip": n_kw_skip,
-                            "n_dedupe_skip": n_dedupe_skip,
                             "n_added": n_added,
                             "first_card_text_len": sample_len,
                         },
@@ -1192,26 +1180,9 @@ class LinkedInScraper:
                 except Exception as e:
                     print(f"  → Error getting articles: {e}")
 
-            if (
-                not posts
-                and max_feed_articles > 0
-                and use_keyword_gate
-                and sum_feed_kw_skip > 0
-            ):
-                print(
-                    "[SCRAPER] Hint: the feed had post cards but none matched the "
-                    "hiring-keyword pre-filter. Set FEED_AI_TRIAGE_RAW=true in .env "
-                    f"(or leave default) to collect all feed cards for AI triage. "
-                    f"(approx. keyword_skips={sum_feed_kw_skip}, empty_text_cards={sum_feed_empty})"
-                )
-
-            print(f"[SCRAPER] Feed scrape complete. Found {len(posts)} posts")
-
         except Exception as e:
             print(f"[SCRAPER] ERROR in feed scrape: {e}")
             self._save_screenshot("feed_error")
-
-        return posts
 
     def _scrape_content_search(
         self,
@@ -1220,12 +1191,11 @@ class LinkedInScraper:
         source_tag: str,
         log_label: str,
         screenshot_slug: str,
-    ) -> List[Dict[str, Any]]:
+    ) -> Generator[Dict[str, Any], None, None]:
         """
         LinkedIn /search/results/content/ — same UI for #hashtags and plain keywords.
         keywords_raw is encoded for the `keywords=` query param (e.g. '#hiring' or 'Flutter developer').
         """
-        posts: List[Dict[str, Any]] = []
         kw_enc = quote(keywords_raw, safe="")
         try:
             url = (
@@ -1288,7 +1258,6 @@ class LinkedInScraper:
             # endregion
 
             count = 0
-            seen_keys: set = set()
             cap = config.POSTS_PER_HASHTAG
 
             for pass_num in range(1, config.HASHTAG_SCROLL_COUNT + 1):
@@ -1323,12 +1292,7 @@ class LinkedInScraper:
                         post_data = self._build_post_record(
                             article, source_tag, post_text
                         )
-                        dedupe_key = self._post_dedupe_key(post_data)
-                        if dedupe_key in seen_keys:
-                            continue
-                        seen_keys.add(dedupe_key)
-
-                        posts.append(post_data)
+                        yield post_data
                         count += 1
                         print(f"  → Found post #{count}")
 
@@ -1354,33 +1318,31 @@ class LinkedInScraper:
                 if count >= cap:
                     break
 
-            print(f"[SCRAPER] [{log_label}] search complete. Found {len(posts)} posts")
+            print(f"[SCRAPER] [{log_label}] search complete. Found {count} posts")
 
         except Exception as e:
             print(f"[SCRAPER] ERROR in [{log_label}] search: {e}")
             safe_slug = re.sub(r"[^\w\-]+", "_", screenshot_slug)[:80]
             self._save_screenshot(f"search_{safe_slug}_error")
 
-        return posts
-
-    def scrape_hashtag_search(self, hashtag: str) -> List[Dict[str, Any]]:
+    def scrape_hashtag_search(self, hashtag: str) -> Generator[Dict[str, Any], None, None]:
         """Scrape posts for a specific hashtag (#tag)."""
         print(f"[SCRAPER] Searching hashtag: #{hashtag}")
-        return self._scrape_content_search(
+        yield from self._scrape_content_search(
             f"#{hashtag}",
             source_tag=f"search #{hashtag}",
             log_label=f"#{hashtag}",
             screenshot_slug=f"hashtag_{hashtag}",
         )
 
-    def scrape_keyword_search(self, query: str) -> List[Dict[str, Any]]:
+    def scrape_keyword_search(self, query: str) -> Generator[Dict[str, Any], None, None]:
         """Scrape posts for a plain keyword phrase (e.g. 'Flutter developer')."""
         q = (query or "").strip()
         if not q:
-            return []
+            return
         print(f"[SCRAPER] Keyword search: {q!r}")
         slug = q.replace(" ", "_")[:40]
-        return self._scrape_content_search(
+        yield from self._scrape_content_search(
             q,
             source_tag=f"search kw:{q}",
             log_label=q[:80],
@@ -1418,13 +1380,11 @@ class LinkedInScraper:
                 unique_posts.append(post)
         self.posts = unique_posts
 
-    def run(self) -> List[Dict[str, Any]]:
+    def run(self) -> Generator[Dict[str, Any], None, None]:
         """Run full scraping process."""
         print("\n" + "=" * 50)
         print("LINKEDIN JOB SCRAPER")
         print("=" * 50)
-
-        self.posts = []
         scrape_interrupted = False
         try:
             # region agent log
@@ -1453,7 +1413,7 @@ class LinkedInScraper:
 
                 print("\n--- Step 2: Scraping Hashtags ---")
                 for hashtag in config.HASHTAGS:
-                    self.posts.extend(self.scrape_hashtag_search(hashtag))
+                    yield from self.scrape_hashtag_search(hashtag)
                     self._random_delay()
 
                 print("\n--- Step 3: Keyword / phrase searches (content) ---")
@@ -1461,42 +1421,20 @@ class LinkedInScraper:
                     q = (query or "").strip()
                     if not q:
                         continue
-                    self.posts.extend(self.scrape_keyword_search(q))
+                    yield from self.scrape_keyword_search(q)
                     self._random_delay()
             except KeyboardInterrupt:
                 print(
                     "\n[SCRAPER] Ctrl+C — stopping scrape. "
-                    f"Collected {len(self.posts)} raw post(s) so far; will dedupe and continue."
+                    "Collected raw post(s) so far; continuing."
                 )
                 scrape_interrupted = True
             except Exception as e:
                 print(f"\n[SCRAPER] Scrape error ({type(e).__name__}): {e}")
                 print(
-                    f"[SCRAPER] Continuing with {len(self.posts)} post(s) collected so far …"
+                    "Continuing with post(s) collected so far …"
                 )
                 scrape_interrupted = True
 
-            print("\n--- Step 4: Deduplicating ---")
-            self._dedupe_posts_buffer()
-            print(f"[SCRAPER] Total unique posts after deduplication: {len(self.posts)}")
-
-            # region agent log
-            _agent_dbg(
-                "scraper.py:run:success",
-                "run_complete",
-                {
-                    "unique_posts": len(self.posts),
-                    "scrape_interrupted": scrape_interrupted,
-                },
-                "H0",
-            )
-            # endregion
-
-            if scrape_interrupted:
-                print(
-                    "[SCRAPER] Run finished early — proceeding to analysis with partial results."
-                )
-
-            return self.posts
         finally:
             self._shutdown_browser()

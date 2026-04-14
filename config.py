@@ -59,12 +59,13 @@ HASHTAGS = [
 # Plain keyword / phrase searches (no #); LinkedIn content search, URL-encoded.
 CONTENT_SEARCH_QUERIES = [
     "Flutter developer",
-    # "Go (Golang)",
+    "Go (Golang)",
+    "Next JS",
+    "Node JS",
+    # "React JS",
     # "Python",
     # "JavaScript",
     # "Dart",
-    # "React JS",
-    # "Next JS",
     # "AWS",
     # "Dart developer",
     # "HTML5",
@@ -78,10 +79,10 @@ CONTENT_SEARCH_QUERIES = [
 ]
 
 # Scraper settings
-FEED_SCROLL_COUNT = 2
+FEED_SCROLL_COUNT = 4
 FEED_SCROLL_DELAY = 2  # seconds
-HASHTAG_SCROLL_COUNT = 2  # search results lazy-load; body scroll does not load more
-POSTS_PER_HASHTAG = 15  # max posts collected per hashtag OR per content query below
+HASHTAG_SCROLL_COUNT = 4  # search results lazy-load; body scroll does not load more
+POSTS_PER_HASHTAG = 20  # max posts collected per hashtag OR per content query below
 ACTION_DELAY_MIN = 2  # seconds
 ACTION_DELAY_MAX = 3  # seconds
 
