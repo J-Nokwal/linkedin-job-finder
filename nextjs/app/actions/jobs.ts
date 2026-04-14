@@ -207,20 +207,34 @@ export async function searchJobs(query: string): Promise<Application[]> {
 
     const searchTerms = query.toLowerCase().split(/\s+/).filter(Boolean);
 
-    // Build filter conditions for each search term
+    const searchFields = [
+      "companyDetected",
+      "roleDetected",
+      "locationDetected",
+      "postText",
+      "authorName",
+      "authorTitle",
+      "postKind",
+      "employmentType",
+      "seniority",
+      "salaryOrCompMentioned",
+      "requirements",
+      "requirementsNiceToHave",
+      "skillsMatched",
+      "skillsMissing",
+      "hashtagsInText",
+      "externalUrls",
+      "linkedinJobUrls",
+      "linkedinProfileUrls",
+      "redFlags",
+      "nextStepForCandidate",
+      "action",
+    ] as const;
+
     const whereConditions = searchTerms.map((term) => ({
-      OR: [
-        { companyDetected: { contains: term, mode: "insensitive" as const } },
-        { roleDetected: { contains: term, mode: "insensitive" as const } },
-        { locationDetected: { contains: term, mode: "insensitive" as const } },
-        { postText: { contains: term, mode: "insensitive" as const } },
-        { seniority: { contains: term, mode: "insensitive" as const } },
-        { employmentType: { contains: term, mode: "insensitive" as const } },
-        { salaryOrCompMentioned: { contains: term, mode: "insensitive" as const } },
-        { requirements: { contains: term, mode: "insensitive" as const } },
-        { skillsMatched: { contains: term, mode: "insensitive" as const } },
-        { hashtagsInText: { contains: term, mode: "insensitive" as const } },
-      ],
+      OR: searchFields.map((field) => ({
+        [field]: { contains: term },
+      })),
     }));
 
     const jobs = await prisma.application.findMany({

@@ -38,6 +38,14 @@ export const columns: ColumnDef<Application>[] = [
     cell: ({ row }) => {
       const company = row.getValue("companyDetected") as string;
       return (
+        <div className="flex items-start gap-2 max-w-80">
+      <Building className="mt-0.5 w-4 h-4 text-muted-foreground shrink-0" />
+      <span className="w-max font-medium wrap-break-word leading-tight whitespace-normal">
+        {company || "N/A"}
+      </span>
+    </div>
+      );
+      return (
         <div className="flex items-center gap-2">
           <Building className="w-4 h-4 text-muted-foreground" />
           <span className="font-medium">{company || "N/A"}</span>
@@ -49,27 +57,31 @@ export const columns: ColumnDef<Application>[] = [
     accessorKey: "roleDetected",
     header: "Role",
     cell: ({ row }) => {
-      const role = row.getValue("roleDetected") as string;
-      return (
-        <div className="flex items-center gap-2">
-          <Briefcase className="w-4 h-4 text-muted-foreground" />
-          <span>{role || "N/A"}</span>
-        </div>
-      );
-    },
+  const role = row.getValue("roleDetected") as string;
+  return (
+    <div className="flex items-start gap-2 max-w-96">
+      <Briefcase className="mt-0.5 w-4 h-4 text-muted-foreground shrink-0" />
+      <span className="w-max wrap-break-word leading-tight whitespace-normal">
+        {role || "N/A"}
+      </span>
+    </div>
+  );
+},
   },
   {
     accessorKey: "locationDetected",
     header: "Location",
     cell: ({ row }) => {
-      const location = row.getValue("locationDetected") as string;
-      return (
-        <div className="flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-muted-foreground" />
-          <span>{location || "N/A"}</span>
-        </div>
-      );
-    },
+  const location = row.getValue("locationDetected") as string;
+  return (
+    <div className="flex items-start gap-2 max-w-64">
+      <MapPin className="mt-0.5 w-4 h-4 text-muted-foreground shrink-0" />
+      <span className="w-max wrap-break-word leading-tight whitespace-normal">
+        {location || "N/A"}
+      </span>
+    </div>
+  );
+},
   },
   {
     accessorKey: "employmentType",

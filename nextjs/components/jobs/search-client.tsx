@@ -27,7 +27,7 @@ export default function SearchClient() {
       <div className="flex gap-2 mb-4">
         <Input
           type="text"
-          placeholder="Search title, company, keywords..."
+          placeholder="Search title, company, hashtags, description, skills, location..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -35,7 +35,7 @@ export default function SearchClient() {
         />
 
         <Button onClick={handleSearch} disabled={isPending}>
-          <SearchIcon className="h-4 w-4 mr-2" />
+          <SearchIcon className="mr-2 w-4 h-4" />
           {isPending ? "Searching..." : "Search"}
         </Button>
       </div>

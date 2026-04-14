@@ -56,6 +56,20 @@ function extractLinkedInProfileUrls(links: Array<{ href: string; text: string }>
     .filter((href) => href.includes("linkedin.com/in/"));
 }
 
+function parseDate(value: string | Date | null | undefined): Date | null {
+  if (value == null || value === "") {
+    return null;
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  return isNaN(date.getTime()) ? null : date;
+}
+
+function parseScrapedAt(value: string | Date | null | undefined): Date {
+  const date = parseDate(value);
+  return date ?? new Date();
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -67,10 +81,8 @@ export async function POST(request: NextRequest) {
 
     for (const job of jobs) {
       // Parse date_posted if it exists
-      let datePosted: Date | null = null;
-      if (job.date_posted) {
-        datePosted = new Date(job.date_posted);
-      }
+      const datePosted = parseDate(job.date_posted);
+      const scrapedAt = parseScrapedAt(job.scraped_at);
 
       // Extract URLs from links
       const externalUrls = extractExternalUrls(job.links || []);
@@ -90,7 +102,7 @@ export async function POST(request: NextRequest) {
           linkedinJobUrls: JSON.stringify(linkedinJobUrls),
           linkedinProfileUrls: JSON.stringify(linkedinProfileUrls),
           hashtagsInText: JSON.stringify(job.hashtags_in_text || []),
-          scrapedAt: new Date(job.scraped_at),
+          scrapedAt,
           activityUrn: job.activity_urn,
           postKind: job.post_kind,
           jobRelevance: job.job_relevance_0_100,

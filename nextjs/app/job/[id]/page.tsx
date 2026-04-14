@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getJobById, getNextJobId, getPreviousJobId, markJobAsViewed } from "@/app/actions/jobs";
+import MarkAsViewAndGoNextComponent from "./markAsViewComponent";
 
 function parseJsonArray(value?: string | null): string[] {
   if (!value) {
@@ -85,9 +86,7 @@ export default async function JobDetailPage({ params }: {   params: Promise<{ id
     );
   }
 
-  if (!job.isViewed) {
-    await markJobAsViewed(job.id);
-  }
+
 
   const nextJobId = await getNextJobId(job.id);
   const previousJobId = await getPreviousJobId(job.id);
@@ -119,6 +118,13 @@ export default async function JobDetailPage({ params }: {   params: Promise<{ id
           ) : (
             <Button variant="outline" disabled>
               Previous
+            </Button>
+          )}
+          {nextJobId ? (
+           <MarkAsViewAndGoNextComponent jobId={job.id} nextJobId={nextJobId} isViewed={job.isViewed} />
+          ) : (
+            <Button variant="default" disabled>
+              Next
             </Button>
           )}
           {nextJobId ? (

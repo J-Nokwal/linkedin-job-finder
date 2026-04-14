@@ -58,6 +58,11 @@ export default async function Page({
                 Search
               </Link>
             </Button>
+            <Button variant={"link"}>
+              <Link href="/application-queue" className="underline">
+                Application Queue
+              </Link>
+            </Button>
           </div>
         </div>
 

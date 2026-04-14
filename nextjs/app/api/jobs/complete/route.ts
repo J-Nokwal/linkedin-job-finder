@@ -51,9 +51,18 @@ function extractLinkedInProfileUrls(links: Array<{ href: string; text: string }>
   return links.map((link) => link.href).filter((href) => href.includes("linkedin.com/in/"));
 }
 
-function parseScrapedAt(value: string | null): Date {
-  const date = value ? new Date(value) : new Date();
-  return isNaN(date.getTime()) ? new Date() : date;
+function parseDate(value: string | Date | null | undefined): Date | null {
+  if (value == null || value === "") {
+    return null;
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  return isNaN(date.getTime()) ? null : date;
+}
+
+function parseScrapedAt(value: string | Date | null | undefined): Date {
+  const date = parseDate(value);
+  return date ?? new Date();
 }
 
 export async function POST(request: NextRequest) {
@@ -82,6 +91,7 @@ export async function POST(request: NextRequest) {
 
     const postText = analyzedJob.post_text || "";
     const scrapedAt = parseScrapedAt(analyzedJob.scraped_at);
+    const datePosted = parseDate(analyzedJob.date_posted);
     const externalUrls = extractExternalUrls(analyzedJob.links || analyzedJob.external_urls || [] as any);
     const linkedinJobUrls = extractLinkedInJobUrls(analyzedJob.links || analyzedJob.linkedin_job_urls || [] as any);
     const linkedinProfileUrls = extractLinkedInProfileUrls(analyzedJob.links || analyzedJob.linkedin_profile_urls || [] as any);
@@ -100,7 +110,7 @@ export async function POST(request: NextRequest) {
           authorName: analyzedJob.author_name,
           authorTitle: analyzedJob.author_title,
           postUrl: analyzedJob.post_url,
-          datePosted: analyzedJob.date_posted ? new Date(analyzedJob.date_posted) : null,
+          datePosted,
           likesCount: analyzedJob.likes_count || 0,
           source: analyzedJob.source,
           externalUrls: JSON.stringify(externalUrls),
