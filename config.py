@@ -50,7 +50,7 @@ RESULTS_DIR.mkdir(exist_ok=True)
 
 # Hashtags to search (#tag → content search)
 HASHTAGS = [
-    "hiring",
+    "remote",
     # "nowhiring",
     # "jobopening",
     # "opportunity"
@@ -58,15 +58,15 @@ HASHTAGS = [
 
 # Plain keyword / phrase searches (no #); LinkedIn content search, URL-encoded.
 CONTENT_SEARCH_QUERIES = [
-    "Flutter developer",
+    "Flutter",
     "Go (Golang)",
     "Next JS",
     "Node JS",
+    "AWS",
     # "React JS",
     # "Python",
     # "JavaScript",
     # "Dart",
-    # "AWS",
     # "Dart developer",
     # "HTML5",
     # "Mobile Development",
@@ -79,18 +79,18 @@ CONTENT_SEARCH_QUERIES = [
 ]
 
 # Scraper settings
-FEED_SCROLL_COUNT = 4
+FEED_SCROLL_COUNT = 8
 FEED_SCROLL_DELAY = 2  # seconds
-HASHTAG_SCROLL_COUNT = 4  # search results lazy-load; body scroll does not load more
-POSTS_PER_HASHTAG = 20  # max posts collected per hashtag OR per content query below
+HASHTAG_SCROLL_COUNT = 3  # search results lazy-load; body scroll does not load more
+POSTS_PER_HASHTAG = 25  # max posts collected per hashtag OR per content query below
 ACTION_DELAY_MIN = 2  # seconds
 ACTION_DELAY_MAX = 3  # seconds
 
 # LinkedIn /search/results/content/ facet filters (JSON-like values, URL-encoded).
-# Example: datePosted=["past-week"]  contentType=["jobs"]
+# Example: datePosted=["past-week"] or '["past-24h"]'  contentType=["jobs"]
 # Set to "" to omit a filter.
 # contentType=["jobs"] shows LinkedIn job *listing* UI — not the post-card DOM this scraper targets.
-SEARCH_FILTER_DATE_POSTED = '["past-week"]'
+SEARCH_FILTER_DATE_POSTED = '["past-24h"]'
 SEARCH_FILTER_CONTENT_TYPE = os.getenv("SEARCH_FILTER_CONTENT_TYPE", "jobs").strip()
 
 
@@ -129,8 +129,14 @@ Return JSON with these exact fields:
   "action": "apply now / save for later / skip"
 }}"""
 
+
 ENRICHMENT_SYSTEM_PROMPT = """You are a career advisor AI. You receive structured JSON from a LinkedIn scraper (text, links, URLs) plus the candidate profile.
-Return ONLY one valid JSON object. Never invent URLs: every URL in apply_links_ranked and apply_link must appear in the provided links, external_urls, linkedin_job_urls, or post_url fields."""
+Return ONLY one valid JSON object. Never invent URLs: every URL in apply_links_ranked and apply_link must appear in the provided links, external_urls, linkedin_job_urls, or post_url fields.
+
+When evaluating candidate fit:
+- Focus primarily on CORE requirements (primary tech stack, years of experience, role type).
+- Treat secondary/nice-to-have requirements (bonus tools, domain-specific experience, certifications) as optional — do not penalize the candidate for missing these unless they make up the overwhelming majority of the job description.
+- A candidate is a strong match if they meet the core requirements, even if they lack some extras."""
 
 TRIAGE_SYSTEM_PROMPT = """You triage LinkedIn feed cards. Return ONLY one small JSON object, no markdown."""
 

@@ -133,8 +133,8 @@ def _process_queue_loop(scraper: LinkedInScraper, analyzer: JobAnalyzer, min_rel
         # Claim just 1 item at a time for sequential processing
         queue_items = _claim_queue_jobs(1, worker_id)
         if not queue_items:
-            print("[MAIN] Queue empty; sleeping 10 seconds and fetching new posts")
-            time.sleep(10)
+            print("[MAIN] Queue empty; sleeping 60 seconds and fetching new posts")
+            time.sleep(60)
             continue
 
         item = queue_items[0]

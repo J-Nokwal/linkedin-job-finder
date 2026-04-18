@@ -101,8 +101,8 @@ def _process_queue_loop(analyzer: JobAnalyzer, min_rel: int, batch_size: int = 1
     while True:
         queue_items = _claim_queue_jobs(batch_size, worker_id)
         if not queue_items:
-            print("[WORKER] Queue empty; sleeping 10 seconds")
-            time.sleep(10)
+            print("[WORKER] Queue empty; sleeping 60 seconds")
+            time.sleep(60)
             continue
 
         for item in queue_items:

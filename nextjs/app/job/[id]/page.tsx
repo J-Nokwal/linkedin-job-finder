@@ -2,8 +2,14 @@ import Link from "next/link";
 import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getJobById, getNextJobId, getPreviousJobId, markJobAsViewed } from "@/app/actions/jobs";
+import {
+  getJobById,
+  getNextJobId,
+  getPreviousJobId,
+  markJobAsViewed,
+} from "@/app/actions/jobs";
 import MarkAsViewAndGoNextComponent from "./markAsViewComponent";
+import CopyButton from "@/components/common/copybutton";
 
 function parseJsonArray(value?: string | null): string[] {
   if (!value) {
@@ -62,16 +68,28 @@ function renderLinks(items: string[]) {
   );
 }
 
-function DetailRow({ label, value }: { label: string; value: string | ReactNode }) {
+function DetailRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | ReactNode;
+}) {
   return (
     <div className="gap-1 grid">
-      <div className="text-muted-foreground text-xs uppercase tracking-[0.16em]">{label}</div>
+      <div className="text-muted-foreground text-xs uppercase tracking-[0.16em]">
+        {label}
+      </div>
       <div className="text-foreground text-sm">{value}</div>
     </div>
   );
 }
 
-export default async function JobDetailPage({ params }: {   params: Promise<{ id: string }> }) {
+export default async function JobDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const jobId = (await params).id;
   const job = await getJobById(jobId ?? null);
 
@@ -85,8 +103,6 @@ export default async function JobDetailPage({ params }: {   params: Promise<{ id
       </div>
     );
   }
-
-
 
   const nextJobId = await getNextJobId(job.id);
   const previousJobId = await getPreviousJobId(job.id);
@@ -105,7 +121,9 @@ export default async function JobDetailPage({ params }: {   params: Promise<{ id
       <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
         <div>
           <h1 className="font-bold text-3xl">Full Job Details</h1>
-          <p className="text-muted-foreground text-sm">Review every field and navigate to the next job.</p>
+          <p className="text-muted-foreground text-sm">
+            Review every field and navigate to the next job.
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" asChild>
@@ -121,7 +139,11 @@ export default async function JobDetailPage({ params }: {   params: Promise<{ id
             </Button>
           )}
           {nextJobId ? (
-           <MarkAsViewAndGoNextComponent jobId={job.id} nextJobId={nextJobId} isViewed={job.isViewed} />
+            <MarkAsViewAndGoNextComponent
+              jobId={job.id}
+              nextJobId={nextJobId}
+              isViewed={job.isViewed}
+            />
           ) : (
             <Button variant="default" disabled>
               Next
@@ -146,26 +168,37 @@ export default async function JobDetailPage({ params }: {   params: Promise<{ id
               <div>
                 <div className="flex items-center gap-3 text-muted-foreground text-sm">
                   <span>{job.companyDetected || "Unknown company"}</span>
-                  <Badge variant={job.isFit ? "default" : "secondary"} className="text-xs">
+                  <Badge
+                    variant={job.isFit ? "default" : "secondary"}
+                    className="text-xs"
+                  >
                     {job.isFit ? "Fit" : "Not a fit"}
                   </Badge>
                 </div>
-                <h2 className="mt-2 font-semibold text-2xl">{job.roleDetected || "Unknown role"}</h2>
+                <h2 className="mt-2 font-semibold text-2xl">
+                  {job.roleDetected || "Unknown role"}
+                </h2>
                 <div className="text-muted-foreground text-sm">
-                  {job.locationDetected || "No location"} • {job.employmentType || "No type"}
+                  {job.locationDetected || "No location"} •{" "}
+                  {job.employmentType || "No type"}
                 </div>
               </div>
               <div className="space-y-2 text-right">
                 <Badge variant="outline" className="text-xs">
                   {job.isViewed ? "Viewed" : "New"}
                 </Badge>
-                <div className="text-muted-foreground text-xs">Relevance: {job.jobRelevance ?? "—"}</div>
+                <div className="text-muted-foreground text-xs">
+                  Relevance: {job.jobRelevance ?? "—"}
+                </div>
               </div>
             </div>
 
             <div className="gap-4 grid sm:grid-cols-2 mt-6">
               <DetailRow label="Seniority" value={job.seniority || "—"} />
-              <DetailRow label="Salary" value={job.salaryOrCompMentioned || "—"} />
+              <DetailRow
+                label="Salary"
+                value={job.salaryOrCompMentioned || "—"}
+              />
               <DetailRow label="Source" value={job.source || "—"} />
               <DetailRow label="Likes" value={String(job.likesCount || 0)} />
               <DetailRow label="Posted" value={formatDate(job.datePosted)} />
@@ -176,7 +209,11 @@ export default async function JobDetailPage({ params }: {   params: Promise<{ id
           </div>
 
           <section className="bg-card/80 shadow-sm p-6 border rounded-lg">
-            <h3 className="font-semibold text-lg">Post text</h3>
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold text-lg">Post text</h3>
+              <CopyButton text={job.postText || ""} />
+            </div>
+
             <p className="mt-3 text-foreground text-sm leading-6 whitespace-pre-wrap">
               {job.postText || "No text available."}
             </p>
@@ -212,11 +249,41 @@ export default async function JobDetailPage({ params }: {   params: Promise<{ id
 
         <aside className="space-y-6">
           <div className="bg-card/80 shadow-sm p-6 border rounded-lg">
+            <h3 className="font-semibold text-lg">Fit details</h3>
+            <div className="space-y-3 mt-4 text-foreground text-sm">
+              <DetailRow
+                label="Fit score"
+                value={job.fitScore != null ? `${job.fitScore}%` : "—"}
+              />
+              <DetailRow label="Fit reason" value={job.fitReason || "—"} />
+              <DetailRow
+                label="Next step"
+                value={job.nextStepForCandidate || "—"}
+              />
+            </div>
+          </div>
+          <div className="bg-card/80 shadow-sm p-6 border rounded-lg">
             <h3 className="font-semibold text-lg">Contact & links</h3>
             <div className="space-y-3 mt-4 text-foreground text-sm">
               <DetailRow label="Author name" value={job.authorName || "—"} />
               <DetailRow label="Author title" value={job.authorTitle || "—"} />
-              <DetailRow label="Post URL" value={job.postUrl ? <a href={job.postUrl} target="_blank" rel="noreferrer" className="text-primary underline">{job.postUrl}</a> : "—"} />
+              <DetailRow
+                label="Post URL"
+                value={
+                  job.postUrl ? (
+                    <a
+                      href={job.postUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary underline"
+                    >
+                      {job.postUrl}
+                    </a>
+                  ) : (
+                    "—"
+                  )
+                }
+              />
               <DetailRow label="Activity URN" value={job.activityUrn || "—"} />
             </div>
           </div>
@@ -225,15 +292,21 @@ export default async function JobDetailPage({ params }: {   params: Promise<{ id
             <h3 className="font-semibold text-lg">Links</h3>
             <div className="space-y-4 mt-3 text-sm">
               <div>
-                <div className="text-muted-foreground text-xs uppercase tracking-[0.16em]">External URLs</div>
+                <div className="text-muted-foreground text-xs uppercase tracking-[0.16em]">
+                  External URLs
+                </div>
                 <div className="mt-2">{renderLinks(externalUrls)}</div>
               </div>
               <div>
-                <div className="text-muted-foreground text-xs uppercase tracking-[0.16em]">LinkedIn Job URLs</div>
+                <div className="text-muted-foreground text-xs uppercase tracking-[0.16em]">
+                  LinkedIn Job URLs
+                </div>
                 <div className="mt-2">{renderLinks(linkedinJobUrls)}</div>
               </div>
               <div>
-                <div className="text-muted-foreground text-xs uppercase tracking-[0.16em]">LinkedIn Profiles</div>
+                <div className="text-muted-foreground text-xs uppercase tracking-[0.16em]">
+                  LinkedIn Profiles
+                </div>
                 <div className="mt-2">{renderLinks(linkedinProfileUrls)}</div>
               </div>
             </div>
@@ -242,15 +315,6 @@ export default async function JobDetailPage({ params }: {   params: Promise<{ id
           <div className="bg-card/80 shadow-sm p-6 border rounded-lg">
             <h3 className="font-semibold text-lg">Hashtags</h3>
             <div className="mt-3">{renderList(hashtagsInText)}</div>
-          </div>
-
-          <div className="bg-card/80 shadow-sm p-6 border rounded-lg">
-            <h3 className="font-semibold text-lg">Fit details</h3>
-            <div className="space-y-3 mt-4 text-foreground text-sm">
-              <DetailRow label="Fit score" value={job.fitScore != null ? `${job.fitScore}%` : "—"} />
-              <DetailRow label="Fit reason" value={job.fitReason || "—"} />
-              <DetailRow label="Next step" value={job.nextStepForCandidate || "—"} />
-            </div>
           </div>
         </aside>
       </div>

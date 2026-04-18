@@ -1,0 +1,19 @@
+🚀 Starting all services (PRODUCTION MODE)...
+📁 Working dir: /home/rockbot/Documents/ai-tool/linkedin-job-finder
+🐍 Using Python: /home/rockbot/Documents/ai-tool/linkedin-job-finder/venv/bin/python
+📦 Using existing build
+▶ Starting Next.js...
+
+> nextjs@0.1.0 start
+> next start
+
+▲ Next.js 16.2.3
+- Local:         http://localhost:3000
+- Network:       http://192.168.18.146:3000
+✓ Ready in 362ms
+🌐 Opening http://localhost:3000
+What do you want to run?
+1) Both automation (scraper) and analyser
+2) Just analyser
+
+🛑 Stopping all services...
