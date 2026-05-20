@@ -16,3 +16,4 @@ apikeys.py
 generated/
 browser_profile
 results
+.cursor/debug-0d2521.log

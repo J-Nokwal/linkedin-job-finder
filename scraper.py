@@ -50,7 +50,6 @@ def _agent_dbg(
             resp.read(64)
     except (urllib.error.URLError, TimeoutError, OSError):
         pass
-
     try:
         _AGENT_DBG_LOG.parent.mkdir(parents=True, exist_ok=True)
         with open(_AGENT_DBG_LOG, "a", encoding="utf-8") as f:
@@ -739,13 +738,6 @@ class LinkedInScraper:
         """Click visible 'see more' / 'read more' controls (feed + search)."""
         clicks = 0
         selectors = [
-            "button.feed-shared-inline-show-more-text__see-more--full-width",
-            "button.feed-shared-inline-show-more-text__see-more",
-            "span.feed-shared-inline-show-more-text__see-more",
-            ".feed-shared-inline-show-more-text__see-more-less-toggle",
-            "button[aria-label*='See more']",
-            "button[aria-label*='Read more']",
-            "button[aria-label*='show more']",
             "button[data-testid='expandable-text-button']",
         ]
         for fr in self._iter_scrape_frames():
@@ -754,13 +746,16 @@ class LinkedInScraper:
                     if clicks >= max_clicks:
                         return clicks
                     try:
-                        if btn.is_visible():
-                            btn.click(timeout=1200)
+                        if btn.is_visible() and btn.is_enabled() and btn.inner_text() == "… more":
+                            print("button found", btn.inner_text())
+                            btn.dispatch_event("click")  # bypasses overlay hit-testing
+                            print("button clicked")
                             clicks += 1
                             time.sleep(0.08)
                     except Exception:
                         pass
-        for pattern in (r"see\s+more", r"read\s+more", r"show\s+more"):
+
+        for pattern in (r'\.+\s*more',):
             try:
                 loc = self.page.get_by_role("button", name=re.compile(pattern, re.I))
                 n = loc.count()
@@ -768,13 +763,17 @@ class LinkedInScraper:
                     if clicks >= max_clicks:
                         return clicks
                     try:
-                        loc.nth(i).click(timeout=900)
+                        btn = loc.nth(i)
+                        print("button found2", btn.inner_text())
+                        btn.dispatch_event("click")  # bypasses overlay hit-testing
+                        print("button clicked2")
                         clicks += 1
                         time.sleep(0.08)
                     except Exception:
                         pass
             except Exception:
                 pass
+
         return clicks
 
     def _article_primary_text(self, article) -> str:
