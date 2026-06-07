@@ -2,6 +2,7 @@
 
 import {
   ColumnDef,
+  RowSelectionState,
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
@@ -19,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUp, ArrowDown } from "lucide-react";
@@ -27,14 +28,17 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUp, ArrowD
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  onSelectedRowsChange?: (selectedRows: TData[]) => void;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  onSelectedRowsChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const table = useReactTable({
     data,
@@ -45,16 +49,25 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
+      rowSelection,
     },
+    enableRowSelection: true,
     initialState: {
       pagination: {
         pageSize: 100,
       },
     },
   });
+
+  useEffect(() => {
+    if (onSelectedRowsChange) {
+      onSelectedRowsChange(table.getSelectedRowModel().flatRows.map((row) => row.original));
+    }
+  }, [onSelectedRowsChange, rowSelection, table]);
 
   return (
     <div className="w-full">

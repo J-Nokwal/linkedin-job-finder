@@ -1,14 +1,12 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useTransition } from "react";
-import { getJobsByDate } from "@/app/actions/jobs";
+import { useState, useTransition } from "react";
 import { DataTable } from "@/components/jobs/data-table";
 import { columns } from "@/components/jobs/columns";
 import { Application } from "@/lib/client-generated/prisma/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 
 function shiftDate(dateStr: string, diff: number) {
   const date = new Date(dateStr);
@@ -32,14 +30,52 @@ export default function JobsClient({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  const [isPending] = useTransition();
 
   const date = searchParams.get("date") || initialDate;
+  const [selectedJobs, setSelectedJobs] = useState<Application[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   function setDate(newDate: string) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("date", newDate);
     router.push(`?${params.toString()}`);
+  }
+
+  async function handleDeleteSelected() {
+    if (!selectedJobs.length) {
+      return;
+    }
+
+    if (!window.confirm(`Delete ${selectedJobs.length} selected job${selectedJobs.length === 1 ? "" : "s"}?`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch("/api/jobs/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ids: selectedJobs.map((job) => job.id) }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to delete selected jobs");
+      }
+
+      setSelectedJobs([]);
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+      window.alert(error instanceof Error ? error.message : "Unable to delete selected jobs.");
+    } finally {
+      setIsDeleting(false);
+    }
   }
 
   return (
@@ -81,7 +117,22 @@ export default function JobsClient({
         {isPending && <span className="text-muted-foreground text-sm">Loading...</span>}
       </div>
 
-      <DataTable columns={columns} data={initialJobs} />
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={handleDeleteSelected}
+          disabled={selectedJobs.length === 0 || isDeleting}
+        >
+          {isDeleting ? "Deleting..." : `Delete selected (${selectedJobs.length})`}
+        </Button>
+      </div>
+
+      <DataTable
+        columns={columns}
+        data={initialJobs}
+        onSelectedRowsChange={setSelectedJobs}
+      />
     </div>
   );
 }

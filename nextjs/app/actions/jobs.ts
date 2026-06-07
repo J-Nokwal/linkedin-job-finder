@@ -199,6 +199,27 @@ export async function deleteJob(id: string): Promise<{ success: boolean; error?:
   }
 }
 
+export async function deleteJobs(ids: string[]): Promise<{ success: boolean; deletedCount?: number; error?: string }> {
+  try {
+    if (!ids.length) {
+      return { success: false, error: "No ids provided" };
+    }
+
+    const result = await prisma.application.deleteMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+    });
+
+    return { success: true, deletedCount: result.count };
+  } catch (error) {
+    console.error("Error deleting jobs:", error);
+    return { success: false, error: "Failed to delete jobs" };
+  }
+}
+
 export async function searchJobs(query: string): Promise<Application[]> {
   try {
     if (!query.trim()) {

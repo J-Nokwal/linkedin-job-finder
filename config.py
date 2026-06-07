@@ -21,6 +21,13 @@ def _env_int(key: str, default: int) -> int:
     except ValueError:
         return default
 
+
+def _env_float(key: str, default: float) -> float:
+    try:
+        return float(os.getenv(key, str(default)).strip())
+    except ValueError:
+        return default
+
 # LinkedIn credentials
 LINKEDIN_EMAIL = os.getenv("LINKEDIN_EMAIL", "")
 LINKEDIN_PASSWORD = os.getenv("LINKEDIN_PASSWORD", "")
@@ -29,6 +36,16 @@ LINKEDIN_PASSWORD = os.getenv("LINKEDIN_PASSWORD", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "http://localhost:11434/v1")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "llama3")
+# Comma-separated list of models to rotate through (Groq free-tier friendly).
+# If set, OPENAI_MODEL is used only as a fallback when this list is empty.
+_OPENAI_MODELS_RAW = os.getenv("OPENAI_MODELS", "").strip()
+OPENAI_MODELS: list = (
+    [m.strip() for m in _OPENAI_MODELS_RAW.split(",") if m.strip()]
+    if _OPENAI_MODELS_RAW
+    else [OPENAI_MODEL]
+)
+# Seconds to sleep between each analysis (supports decimals, e.g. 2.5).
+AI_ANALYSIS_DELAY = _env_float("AI_ANALYSIS_DELAY", 2.0)
 AI_MAX_TOKENS_ENRICH = _env_int("AI_MAX_TOKENS_ENRICH", 1600)
 AI_MAX_TOKENS_TRIAGE = _env_int("AI_MAX_TOKENS_TRIAGE", 180)
 AI_TRIAGE_FIRST = _env_bool("AI_TRIAGE_FIRST", False)
@@ -50,7 +67,7 @@ RESULTS_DIR.mkdir(exist_ok=True)
 
 # Hashtags to search (#tag → content search)
 HASHTAGS = [
-    "remote",
+    # "remote",
     # "nowhiring",
     # "jobopening",
     # "opportunity"
@@ -58,25 +75,50 @@ HASHTAGS = [
 
 # Plain keyword / phrase searches (no #); LinkedIn content search, URL-encoded.
 CONTENT_SEARCH_QUERIES = [
+
+    # --- Core primary skills (direct differentiators) ---
     "Flutter",
     "Go (Golang)",
     "Next JS",
-    "Node JS",
+    "React JS",
     "AWS",
-    # "React JS",
-    # "Python",
-    # "JavaScript",
-    # "Dart",
-    # "Dart developer",
-    # "HTML5",
-    # "Mobile Development",
-    # "Backend & Cloud",
-    # "DynamoDB",
-    # "Serverless Architecture",
+    "Python",
+    "Dart",
+
+    # --- Role-signal phrases (what hiring posts actually say) ---
+    "Mobile developer",
+    "full stack developer",
+    "cloud engineer",
+    "backend engineer Go",
+
+    # --- Stack-specific depth signals ---
+    "Serverless Architecture",
+    "DynamoDB",
+    "AWS Lambda",
+
+    # --- AI / ML track (NVIDIA DLI certs, Masked R-CNN, BERT/TF-IDF) ---
+    "machine learning engineer",
+    "Python developer",
+
+    # --- Moderate relevance; uncomment if results are thin ---
+    # "Golang backend",
+    # "Node JS",
+    # "Django",
     # "Docker",
-    # "SQL",
-    # "NoSQL (DynamoDB)",
+    # "Flutter AWS",                  # hybrid mobile+cloud posts
+    # "React developer",              # variant of React JS
+    # "deep learning engineer",
+
+    # --- Low signal / too generic; keep off ---
+    # "JavaScript",                   # too broad
+    # "HTML5",                        # too junior/basic
+    # "Dart developer",               # redundant with Flutter
+    # "Backend & Cloud",              # too vague
+    # "SQL",                          # not your primary stack
+    # "NoSQL (DynamoDB)",             # DynamoDB already covers this
+    # "Mobile Development",           # generic; "Mobile developer" is better
 ]
+
 
 # Scraper settings
 FEED_SCROLL_COUNT = 8
@@ -131,14 +173,14 @@ Return JSON with these exact fields:
 
 
 ENRICHMENT_SYSTEM_PROMPT = """You are a career advisor AI. You receive structured JSON from a LinkedIn scraper (text, links, URLs) plus the candidate profile.
-Return ONLY one valid JSON object. Never invent URLs: every URL in apply_links_ranked and apply_link must appear in the provided links, external_urls, linkedin_job_urls, or post_url fields.
+Return ONLY one valid JSON object. Use strict JSON syntax: double quotes for keys and string values, lowercase true/false/null, no markdown or explanatory text. Never invent URLs: every URL in apply_links_ranked and apply_link must appear in the provided links, external_urls, linkedin_job_urls, or post_url fields.
 
 When evaluating candidate fit:
 - Focus primarily on CORE requirements (primary tech stack, years of experience, role type).
 - Treat secondary/nice-to-have requirements (bonus tools, domain-specific experience, certifications) as optional — do not penalize the candidate for missing these unless they make up the overwhelming majority of the job description.
 - A candidate is a strong match if they meet the core requirements, even if they lack some extras."""
 
-TRIAGE_SYSTEM_PROMPT = """You triage LinkedIn feed cards. Return ONLY one small JSON object, no markdown."""
+TRIAGE_SYSTEM_PROMPT = """You triage LinkedIn feed cards. Return ONLY one small JSON object, no markdown, and use strict JSON syntax: lowercase true/false/null."""
 
 TRIAGE_USER_TEMPLATE = """Decide if this post is worth a full job-extraction pass for the candidate.
 

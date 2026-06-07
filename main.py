@@ -205,9 +205,13 @@ def main():
     print("#" * 60)
 
     print("\n[MAIN] Loading configuration...")
-    print(f"  OpenAI Model: {config.OPENAI_MODEL}")
+    if len(config.OPENAI_MODELS) > 1:
+        print(f"  Models (rotating): {', '.join(config.OPENAI_MODELS)}")
+    else:
+        print(f"  OpenAI Model: {config.OPENAI_MODEL}")
     print(f"  OpenAI Base URL: {config.OPENAI_BASE_URL}")
     print(f"  AI request timeout (s): {config.AI_REQUEST_TIMEOUT}")
+    print(f"  Analysis delay (s): {config.AI_ANALYSIS_DELAY}")
     print(f"  AI triage first: {config.AI_TRIAGE_FIRST}")
     print(f"  Feed AI triage raw (no keyword gate): {config.FEED_AI_TRIAGE_RAW}")
     print(f"  Min job relevance (display filter): {min_rel}")
@@ -267,7 +271,6 @@ def main():
         )
         queue_thread.start()
         print("[MAIN] Queue processor running continuously")
-        queue_thread.join()
 
     print("\n[MAIN] Starting AI analysis...")
     analyzer = JobAnalyzer(profile)
