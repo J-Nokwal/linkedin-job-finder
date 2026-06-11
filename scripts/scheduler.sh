@@ -13,6 +13,16 @@ export XAUTHORITY=$(ls /run/user/1000/.mutter-Xwaylandauth.* 2>/dev/null | head 
 set -e
 
 PROJECT_ROOT="/home/rockbot/Documents/ai-tool/linkedin-job-finder"
+
+# ─── Load .env so PLATFORM and other vars are available ──────
+if [ -f "$PROJECT_ROOT/.env" ]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$PROJECT_ROOT/.env"
+  set +a
+fi
+PLATFORM="${PLATFORM:-ollama}"
+
 LOG_DIR="$PROJECT_ROOT/logs"
 LOG_FILE="$LOG_DIR/scheduler-$(date +%Y-%m-%d).log"
 
@@ -88,28 +98,32 @@ fi
 
 echo "🐍 Using Python: $VENV_PYTHON"
 
-# ─── Ensure Ollama is running ─────────────────────────────────
-echo "🤖 Checking Ollama..."
-if curl -sf http://localhost:11434 >/dev/null 2>&1; then
-  echo "   ✅ Ollama already running"
+# ─── Ensure Ollama is running (skip if using Groq) ───────────
+echo "🤖 AI platform: $PLATFORM"
+if [ "$PLATFORM" = "groq" ]; then
+  echo "   ✅ Using Groq API — Ollama not needed"
 else
-  echo "   Ollama not running — starting it..."
-  ollama serve >/dev/null 2>&1 &
-  OLLAMA_PID=$!
-  PIDS+=($OLLAMA_PID)
+  echo "   Checking Ollama..."
+  if curl -sf http://localhost:11434 >/dev/null 2>&1; then
+    echo "   ✅ Ollama already running"
+  else
+    echo "   Ollama not running — starting it..."
+    ollama serve >/dev/null 2>&1 &
+    OLLAMA_PID=$!
+    PIDS+=($OLLAMA_PID)
 
-  # Wait up to 15s for Ollama to be ready
-  for i in $(seq 1 15); do
-    if curl -sf http://localhost:11434 >/dev/null 2>&1; then
-      echo "   ✅ Ollama is up (took ${i}s)"
-      break
-    fi
-    if [ "$i" -eq 15 ]; then
-      echo "   ❌ Ollama did not start in 15s — aborting"
-      exit 1
-    fi
-    sleep 1
-  done
+    for i in $(seq 1 15); do
+      if curl -sf http://localhost:11434 >/dev/null 2>&1; then
+        echo "   ✅ Ollama is up (took ${i}s)"
+        break
+      fi
+      if [ "$i" -eq 15 ]; then
+        echo "   ❌ Ollama did not start in 15s — aborting"
+        exit 1
+      fi
+      sleep 1
+    done
+  fi
 fi
 
 # ─── Build Next.js if needed ─────────────────────────────────

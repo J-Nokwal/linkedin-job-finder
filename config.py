@@ -32,25 +32,46 @@ def _env_float(key: str, default: float) -> float:
 LINKEDIN_EMAIL = os.getenv("LINKEDIN_EMAIL", "")
 LINKEDIN_PASSWORD = os.getenv("LINKEDIN_PASSWORD", "")
 
+# AI platform: "ollama" (local) or "groq" (cloud). Drives all AI defaults below.
+PLATFORM = os.getenv("PLATFORM", "ollama").strip().lower()
+
+_PLATFORM_DEFAULTS = {
+    "ollama": {
+        "base_url": "http://localhost:11434/v1",
+        "api_key": "ollama",
+        "models": ["llama3"],
+        "delay": 2.0,
+        "timeout": 300,
+    },
+    "groq": {
+        "base_url": "https://api.groq.com/openai/v1",
+        "api_key": "",
+        "models": ["llama3-70b-8192", "mixtral-8x7b-32768", "gemma2-9b-it"],
+        "delay": 5.0,
+        "timeout": 60,
+    },
+}
+
+_defaults = _PLATFORM_DEFAULTS.get(PLATFORM, _PLATFORM_DEFAULTS["ollama"])
+
 # OpenAI configuration
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "http://localhost:11434/v1")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "llama3")
-# Comma-separated list of models to rotate through (Groq free-tier friendly).
-# If set, OPENAI_MODEL is used only as a fallback when this list is empty.
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", _defaults["api_key"])
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", _defaults["base_url"])
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", _defaults["models"][0])
+# Comma-separated list of models to rotate through.
 _OPENAI_MODELS_RAW = os.getenv("OPENAI_MODELS", "").strip()
 OPENAI_MODELS: list = (
     [m.strip() for m in _OPENAI_MODELS_RAW.split(",") if m.strip()]
     if _OPENAI_MODELS_RAW
-    else [OPENAI_MODEL]
+    else _defaults["models"]
 )
 # Seconds to sleep between each analysis (supports decimals, e.g. 2.5).
-AI_ANALYSIS_DELAY = _env_float("AI_ANALYSIS_DELAY", 2.0)
+AI_ANALYSIS_DELAY = _env_float("AI_ANALYSIS_DELAY", _defaults["delay"])
 AI_MAX_TOKENS_ENRICH = _env_int("AI_MAX_TOKENS_ENRICH", 1600)
 AI_MAX_TOKENS_TRIAGE = _env_int("AI_MAX_TOKENS_TRIAGE", 180)
 AI_TRIAGE_FIRST = _env_bool("AI_TRIAGE_FIRST", False)
-# Per-request HTTP timeout (seconds). Local Ollama with llama3 + large prompts often needs 180–600+.
-AI_REQUEST_TIMEOUT = _env_int("AI_REQUEST_TIMEOUT", 300)
+# Per-request HTTP timeout (seconds).
+AI_REQUEST_TIMEOUT = _env_int("AI_REQUEST_TIMEOUT", _defaults["timeout"])
 AI_CONCURRENT_ANALYSES = _env_int("AI_CONCURRENT_ANALYSES", 3)
 QUEUE_CLAIM_BATCH_SIZE = _env_int("QUEUE_CLAIM_BATCH_SIZE", 6)
 NEXTJS_API_URL = os.getenv("NEXTJS_API_URL", "").strip()

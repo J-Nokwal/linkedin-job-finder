@@ -8,12 +8,15 @@ import uuid
 
 import config
 from analyzer import JobAnalyzer
+from logger import Logger
+
+log = Logger("WORKER")
 
 
 def _send_to_nextjs_api(path: str, payload: object):
     api_base = config.NEXTJS_API_URL
     if not api_base:
-        print("[WORKER] NEXTJS_API_URL not configured; skipping Next.js API request")
+        log.debug("NEXTJS_API_URL not configured; skipping Next.js API request")
         return None
 
     url = api_base.rstrip("/") + path
@@ -31,11 +34,11 @@ def _send_to_nextjs_api(path: str, payload: object):
             return json.loads(response_body)
     except urllib.error.HTTPError as error:
         payload_text = error.read().decode("utf-8")
-        print(f"[WORKER] Next.js API HTTP error at {url}: {error.code} {payload_text}")
+        log.error(f"Next.js API HTTP error at {url}: {error.code} {payload_text}")
     except urllib.error.URLError as error:
-        print(f"[WORKER] Could not connect to Next.js API at {url}: {error}")
+        log.error(f"Could not connect to Next.js API at {url}: {error}")
     except Exception as error:
-        print(f"[WORKER] Error posting to Next.js API: {error}")
+        log.error(f"Error posting to Next.js API: {error}")
     return None
 
 
@@ -55,9 +58,9 @@ def _complete_queue_job(queue_id: str, analyzed_job: dict) -> None:
         {"queueId": queue_id, "analyzedJob": analyzed_job},
     )
     if not result:
-        print(f"[WORKER] Failed to complete queue item {queue_id}")
+        log.warning(f"Failed to complete queue item {queue_id}")
     elif not result.get("success"):
-        print(f"[WORKER] Queue completion error for {queue_id}:", result.get("error", "unknown"))
+        log.error(f"Queue completion error for {queue_id}: {result.get('error', 'unknown')}")
 
 
 def _job_relevance(job: dict) -> int:
@@ -70,7 +73,6 @@ def _job_relevance(job: dict) -> int:
 def _process_queue_item(analyzer: JobAnalyzer, queue_item: dict, min_rel: int) -> None:
     try:
         payload = queue_item.get("payload") or {}
-        # Handle case where payload is a JSON string instead of dict
         if isinstance(payload, str):
             payload = json.loads(payload)
         raw_post = payload if isinstance(payload, dict) else {}
@@ -83,89 +85,66 @@ def _process_queue_item(analyzer: JobAnalyzer, queue_item: dict, min_rel: int) -
         _complete_queue_job(queue_item["id"], result)
 
         if result.get("is_fit") and _job_relevance(result) >= min_rel:
-            print(
-                "[WORKER] Fit job ready:",
-                result.get("role_detected", "Unknown role"),
-                "@",
-                result.get("company_detected", "Unknown company"),
-                f"score={result.get('fit_score', 0)}",
+            log.success(
+                f"Fit job: {result.get('role_detected', 'Unknown')} "
+                f"@ {result.get('company_detected', 'Unknown')} "
+                f"score={result.get('fit_score', 0)}"
             )
     except Exception as e:
-        print(f"[WORKER] Error analyzing queue item {queue_item['id']}: {e}")
+        log.error(f"Error analyzing queue item {queue_item['id']}: {e}")
 
 
 def _process_queue_loop(analyzer: JobAnalyzer, min_rel: int, batch_size: int = 1) -> None:
     worker_id = f"worker-{uuid.uuid4().hex[:8]}"
-    print(f"[WORKER] Starting queue processor {worker_id} (batch size: {batch_size})")
+    log.info(f"Queue processor [bold]{worker_id}[/bold] started (batch size: {batch_size})")
 
     while True:
         queue_items = _claim_queue_jobs(batch_size, worker_id)
         if not queue_items:
-            print("[WORKER] Queue empty; sleeping 60 seconds")
+            log.debug("Queue empty — sleeping 60s")
             time.sleep(60)
             continue
 
         for item in queue_items:
-            print(f"[WORKER] Processing queue item {item['id']}")
+            log.info(f"Processing queue item [bold]{item['id']}[/bold]")
             _process_queue_item(analyzer, item, min_rel)
-            time.sleep(0.5)  # Small delay between items
+            time.sleep(0.5)
 
 
 def main():
     parser = argparse.ArgumentParser(description="LinkedIn job queue worker")
-    parser.add_argument(
-        "--min-job-relevance",
-        type=int,
-        default=0,
-        metavar="N",
-        help="Only show matching jobs with job_relevance_0_100 >= N (0–100). Default: 0.",
-    )
-    parser.add_argument(
-        "--batch-size",
-        type=int,
-        default=1,
-        metavar="N",
-        help="Number of jobs to claim and process at once. Default: 1.",
-    )
-    parser.add_argument(
-        "--ai-timeout",
-        type=int,
-        default=None,
-        metavar="SECONDS",
-        help="Override AI request timeout in seconds. If not set, uses config value.",
-    )
+    parser.add_argument("--min-job-relevance", type=int, default=0, metavar="N")
+    parser.add_argument("--batch-size",        type=int, default=1, metavar="N")
+    parser.add_argument("--ai-timeout",        type=int, default=None, metavar="SECONDS")
     args = parser.parse_args()
 
-    min_rel = max(0, min(100, args.min_job_relevance))
+    min_rel    = max(0, min(100, args.min_job_relevance))
     batch_size = max(1, args.batch_size)
-
-    print("\n" + "#" * 60)
-    print("#  LINKEDIN JOB QUEUE WORKER")
-    print("#" * 60)
-
-    print("\n[WORKER] Loading configuration...")
-    print(f"  OpenAI Model: {config.OPENAI_MODEL}")
-    print(f"  OpenAI Base URL: {config.OPENAI_BASE_URL}")
     ai_timeout = args.ai_timeout if args.ai_timeout is not None else config.AI_REQUEST_TIMEOUT
-    print(f"  AI request timeout (s): {ai_timeout}")
-    print(f"  Min job relevance (display filter): {min_rel}")
-    print(f"  Batch size: {batch_size}")
+
+    log.banner("LinkedIn Job Queue Worker", f"Platform: {config.PLATFORM.upper()}")
+
+    log.rule("Configuration")
+    log.kv("Model",           config.OPENAI_MODEL)
+    log.kv("Base URL",        config.OPENAI_BASE_URL)
+    log.kv("Request timeout", f"{ai_timeout}s")
+    log.kv("Min relevance",   str(min_rel))
+    log.kv("Batch size",      str(batch_size))
 
     if not config.NEXTJS_API_URL:
-        print("[WORKER] NEXTJS_API_URL not configured. Cannot run worker.")
+        log.error("NEXTJS_API_URL not configured — cannot run worker.")
         sys.exit(1)
 
-    print("\n[WORKER] Loading profile data from myData/...")
+    log.rule("Profile")
     profile = config.load_my_data()
-    print(f"  Profile loaded ({len(profile)} characters)")
+    log.success(f"Profile loaded ({len(profile)} characters)")
 
-    print("\n[WORKER] Starting AI analyzer...")
-    # Override timeout if specified
+    log.rule("Analyzer")
     if args.ai_timeout is not None:
         config.AI_REQUEST_TIMEOUT = args.ai_timeout
     analyzer = JobAnalyzer(profile)
 
-    print("[WORKER] Starting queue processing loop...")
+    log.rule("Queue Loop")
     _process_queue_loop(analyzer, min_rel, batch_size)
 
 

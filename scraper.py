@@ -70,6 +70,9 @@ except ImportError:
     raise
 
 import config
+from logger import Logger
+
+log = Logger("SCRAPER")
 
 
 class LinkedInScraper:
@@ -139,17 +142,28 @@ class LinkedInScraper:
             raise Exception("Cannot reach LinkedIn login page")
 
         try:
-            email_input = self.page.wait_for_selector("#username", timeout=10000)
+            # LinkedIn now uses dynamic React IDs — select by type/autocomplete instead.
+            email_input = self.page.locator(
+                'input[type="email"]:visible, input[autocomplete*="username"]:visible'
+            ).first
+            email_input.wait_for(state="visible", timeout=15000)
             email_input.fill(config.LINKEDIN_EMAIL)
             time.sleep(random.uniform(config.ACTION_DELAY_MIN, config.ACTION_DELAY_MAX))
 
-            password_input = self.page.wait_for_selector("#password", timeout=10000)
+            password_input = self.page.locator(
+                'input[type="password"]:visible, input[autocomplete="current-password"]:visible'
+            ).first
+            password_input.wait_for(state="visible", timeout=10000)
             password_input.fill(config.LINKEDIN_PASSWORD)
             time.sleep(random.uniform(config.ACTION_DELAY_MIN, config.ACTION_DELAY_MAX))
 
-            self.page.click('button[type="submit"]')
+            # LinkedIn uses type="button" not type="submit"; match by visible text.
+            import re as _re
+            self.page.locator("button:visible").filter(
+                has_text=_re.compile(r"^Sign in$")
+            ).click()
             self.page.wait_for_load_state("domcontentloaded")
-            time.sleep(3)
+            time.sleep(2)
 
             self._check_verification()
 
@@ -184,16 +198,19 @@ class LinkedInScraper:
         return any(m in u for m in path_markers)
 
     def _is_on_login_page(self) -> bool:
-        """True if the email/password form is present (LinkedIn sometimes changes wrappers)."""
+        """True if the URL is the login page OR the email/password form is visible."""
+        u = (self.page.url or "").lower()
+        if "linkedin.com/login" in u or "linkedin.com/uas/login" in u:
+            return True
+        # LinkedIn uses dynamic React IDs — match by type/autocomplete attributes.
         login_field_selectors = [
-            "#username",
-            'input[name="session_key"]',
-            'input[id="username"]',
-            "#session_key",
+            'input[type="email"]',
+            'input[autocomplete*="username"]',
+            'input[autocomplete="current-password"]',
         ]
         for sel in login_field_selectors:
             try:
-                if self.page.locator(sel).first.is_visible(timeout=2000):
+                if self.page.locator(sel).first.is_visible(timeout=5000):
                     return True
             except Exception:
                 continue
@@ -235,18 +252,57 @@ class LinkedInScraper:
 
         return False
 
-    def _check_verification(self):
-        """Check for CAPTCHA or verification screen."""
+    def _check_verification(self, timeout: int = 120):
+        """Wait for 2FA / CAPTCHA / push-notification approval to complete."""
+        _2fa_keywords = (
+            "captcha", "verification", "verify",
+            "check your linkedin app", "notification",
+            "two-step", "two step", "authenticate",
+        )
         try:
             page_content = self.page.content().lower()
-            if "captcha" in page_content or "verification" in page_content or "verify" in page_content:
-                print("\n" + "=" * 60)
-                print("MANUAL ACTION REQUIRED")
-                print("LinkedIn is showing a CAPTCHA or verification screen.")
-                print("Please complete the verification in the browser window.")
-                print("Press ENTER when done...")
-                print("=" * 60)
-                input()
+            url = (self.page.url or "").lower()
+            needs_action = (
+                any(kw in page_content for kw in _2fa_keywords)
+                or "checkpoint" in url
+                or "challenge" in url
+                or "login" in url
+            )
+            if not needs_action:
+                return
+
+            log.alert(
+                "⚠️  Manual Action Required — 2FA / Verification",
+                [
+                    "LinkedIn is waiting for you to approve the sign-in.",
+                    "  • Check your LinkedIn app and tap [bold]YES[/bold], or",
+                    "  • Complete any on-screen verification.",
+                    f"  Waiting up to [bold]{timeout}s[/bold] — press ENTER to skip the wait.",
+                ],
+                style="yellow",
+            )
+
+            import select as _select
+            deadline = time.time() + timeout
+            interval = 3
+            while time.time() < deadline:
+                if _select.select([sys.stdin], [], [], 0)[0]:
+                    sys.stdin.readline()
+                    log.info("Manual skip — continuing.")
+                    break
+                time.sleep(interval)
+                try:
+                    self.page.wait_for_load_state("domcontentloaded", timeout=interval * 1000)
+                except Exception:
+                    pass
+                current_url = (self.page.url or "").lower()
+                if not any(kw in current_url for kw in ("login", "checkpoint", "challenge")):
+                    log.success("2FA complete — continuing.")
+                    break
+                remaining = int(deadline - time.time())
+                log.info(f"Still waiting for 2FA… ({remaining}s left)")
+            else:
+                log.warning("2FA timeout reached — continuing anyway.")
         except Exception:
             pass
 
