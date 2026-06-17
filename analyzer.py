@@ -5,7 +5,13 @@ import time
 from typing import Any, Dict, List
 
 try:
-    from openai import APIConnectionError, APITimeoutError, OpenAI, RateLimitError
+    from openai import (
+        APIConnectionError,
+        APIStatusError,
+        APITimeoutError,
+        OpenAI,
+        RateLimitError,
+    )
 except ImportError:
     print("ERROR: OpenAI library not installed. Run: pip install openai")
     raise
@@ -212,15 +218,31 @@ class JobAnalyzer:
 
             n_models = len(config.OPENAI_MODELS)
             result = None
+            last_error = "rate_limit_all_models"
             for attempt in range(n_models):
                 try:
                     result = self.analyze_post(post)
                     break
                 except RateLimitError:
+                    last_error = "rate_limit_all_models"
                     log.warning(f"Rate limit on [bold]{self._current_model()}[/bold] — rotating model…")
                     self._advance_model()
                     if attempt < n_models - 1:
                         time.sleep(2)
+                except APIStatusError as e:
+                    # 413 (request/TPM too large) and 400 (context_length_exceeded):
+                    # the payload doesn't fit this model — rotate to the next
+                    # (bigger-context) model and retry instead of skipping outright.
+                    if e.status_code in (400, 413):
+                        last_error = f"payload_too_large:{e.status_code}"
+                        log.warning(f"{e.status_code} too-large on [bold]{self._current_model()}[/bold] — rotating to a bigger-context model…")
+                        self._advance_model()
+                        if attempt < n_models - 1:
+                            time.sleep(2)
+                    else:
+                        log.error(f"Post {i}/{len(posts)} (APIStatusError {e.status_code}): {e}")
+                        result = {**post, "is_fit": False, "fit_score": 0, "action": "skip", "error": f"api_status:{e.status_code}"}
+                        break
                 except KeyboardInterrupt:
                     log.warning("Ctrl+C — skipping this post, continuing with the next…")
                     result = {**post, "is_fit": False, "fit_score": 0, "action": "skip", "error": "keyboard_interrupt"}
@@ -239,8 +261,8 @@ class JobAnalyzer:
                     break
 
             if result is None:
-                log.warning(f"All {n_models} model(s) rate-limited for post {i} — skipping.")
-                result = {**post, "is_fit": False, "fit_score": 0, "action": "skip", "error": "rate_limit_all_models"}
+                log.warning(f"All {n_models} model(s) failed for post {i} ({last_error}) — skipping.")
+                result = {**post, "is_fit": False, "fit_score": 0, "action": "skip", "error": last_error}
 
             self._advance_model()
             analyzed.append(result)

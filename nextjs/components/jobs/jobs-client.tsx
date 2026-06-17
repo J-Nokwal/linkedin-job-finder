@@ -35,6 +35,7 @@ export default function JobsClient({
   const date = searchParams.get("date") || initialDate;
   const [selectedJobs, setSelectedJobs] = useState<Application[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [tableKey, setTableKey] = useState(0);
 
   function setDate(newDate: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -69,6 +70,7 @@ export default function JobsClient({
       }
 
       setSelectedJobs([]);
+      setTableKey((k) => k + 1);
       router.refresh();
     } catch (error) {
       console.error(error);
@@ -129,9 +131,11 @@ export default function JobsClient({
       </div>
 
       <DataTable
+        key={tableKey}
         columns={columns}
         data={initialJobs}
         onSelectedRowsChange={setSelectedJobs}
+        getRowId={(row) => row.id}
       />
     </div>
   );

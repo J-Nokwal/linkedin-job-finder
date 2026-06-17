@@ -29,12 +29,14 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   onSelectedRowsChange?: (selectedRows: TData[]) => void;
+  getRowId?: (row: TData, index: number) => string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   onSelectedRowsChange,
+  getRowId,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -56,6 +58,7 @@ export function DataTable<TData, TValue>({
       rowSelection,
     },
     enableRowSelection: true,
+    ...(getRowId ? { getRowId } : {}),
     initialState: {
       pagination: {
         pageSize: 100,
@@ -67,7 +70,10 @@ export function DataTable<TData, TValue>({
     if (onSelectedRowsChange) {
       onSelectedRowsChange(table.getSelectedRowModel().flatRows.map((row) => row.original));
     }
-  }, [onSelectedRowsChange, rowSelection, table]);
+    // `table` intentionally omitted — it's a new object every render; `rowSelection`
+    // is the actual signal that selection changed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onSelectedRowsChange, rowSelection]);
 
   return (
     <div className="w-full">
