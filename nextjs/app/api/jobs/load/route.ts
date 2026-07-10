@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     if (filePath) {
       // Load from specific file
-      const fullPath = path.join(process.cwd(), "..", "..", filePath);
+      const fullPath = path.join(process.cwd(), "..", filePath);
       const fileContent = fs.readFileSync(fullPath, "utf-8");
       jobs = JSON.parse(fileContent);
     } else {
@@ -103,13 +103,10 @@ export async function POST(request: NextRequest) {
     
     for (const job of jobs) {
       // console.log("---------------","job")
-      // Skip if already exists (check by scraped_at + post_text combination)
-      const existing = await prisma.application.findFirst({
-        where: {
-          scrapedAt: new Date(job.scraped_at),
-          postText: job.post_text,
-        },
-      });
+      // Skip if already exists — prefer activityUrn (unique index) over text match.
+      const existing = job.activity_urn
+        ? await prisma.application.findUnique({ where: { activityUrn: job.activity_urn } })
+        : await prisma.application.findFirst({ where: { postText: job.post_text, scrapedAt: new Date(job.scraped_at) } });
 
       if (existing) {
         continue;
@@ -142,7 +139,7 @@ export async function POST(request: NextRequest) {
           linkedinProfileUrls: JSON.stringify(linkedinProfileUrls),
           hashtagsInText: JSON.stringify(job.hashtags_in_text || []),
           scrapedAt: new Date(job.scraped_at),
-          activityUrn: job.activity_urn,
+          activityUrn: job.activity_urn || null,
           postKind: job.post_kind,
           jobRelevance: job.job_relevance_0_100,
           isFit: job.is_fit || false,

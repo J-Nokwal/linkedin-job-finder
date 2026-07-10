@@ -4,24 +4,27 @@ import prisma from "@/lib/config/prisma";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const queueId = body?.queueId;
 
-    if (!queueId) {
+    // Accept either a single queueId or an array of queueIds.
+    const ids: string[] =
+      body?.queueIds ?? (body?.queueId ? [body.queueId] : []);
+
+    if (!ids.length) {
       return NextResponse.json(
-        { success: false, error: "Missing queueId" },
+        { success: false, error: "Missing queueId or queueIds" },
         { status: 400 }
       );
     }
 
-    await prisma.applicationQueue.delete({
-      where: { id: queueId },
+    const { count } = await prisma.applicationQueue.deleteMany({
+      where: { id: { in: ids } },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, deleted: count });
   } catch (error) {
-    console.error("Error deleting queue item:", error);
+    console.error("Error deleting queue item(s):", error);
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Failed to delete queue item" },
+      { success: false, error: error instanceof Error ? error.message : "Failed to delete" },
       { status: 500 }
     );
   }

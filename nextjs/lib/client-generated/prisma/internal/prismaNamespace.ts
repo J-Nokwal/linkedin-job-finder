@@ -635,6 +635,7 @@ export const ApplicationQueueScalarFieldEnum = {
   payload: 'payload',
   postText: 'postText',
   scrapedAt: 'scrapedAt',
+  activityUrn: 'activityUrn',
   source: 'source',
   postUrl: 'postUrl',
   status: 'status',

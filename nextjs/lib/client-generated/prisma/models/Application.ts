@@ -506,6 +506,7 @@ export type ApplicationOrderByWithRelationInput = {
 
 export type ApplicationWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  activityUrn?: string
   AND?: Prisma.ApplicationWhereInput | Prisma.ApplicationWhereInput[]
   OR?: Prisma.ApplicationWhereInput[]
   NOT?: Prisma.ApplicationWhereInput | Prisma.ApplicationWhereInput[]
@@ -521,7 +522,6 @@ export type ApplicationWhereUniqueInput = Prisma.AtLeast<{
   linkedinProfileUrls?: Prisma.StringNullableFilter<"Application"> | string | null
   hashtagsInText?: Prisma.StringNullableFilter<"Application"> | string | null
   scrapedAt?: Prisma.DateTimeFilter<"Application"> | Date | string
-  activityUrn?: Prisma.StringNullableFilter<"Application"> | string | null
   postKind?: Prisma.StringNullableFilter<"Application"> | string | null
   jobRelevance?: Prisma.IntNullableFilter<"Application"> | number | null
   isFit?: Prisma.BoolFilter<"Application"> | boolean
@@ -543,7 +543,7 @@ export type ApplicationWhereUniqueInput = Prisma.AtLeast<{
   isViewed?: Prisma.BoolFilter<"Application"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Application"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Application"> | Date | string
-}, "id">
+}, "id" | "activityUrn">
 
 export type ApplicationOrderByWithAggregationInput = {
   id?: Prisma.SortOrder

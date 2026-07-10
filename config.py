@@ -28,10 +28,6 @@ def _env_float(key: str, default: float) -> float:
     except ValueError:
         return default
 
-# LinkedIn credentials
-LINKEDIN_EMAIL = os.getenv("LINKEDIN_EMAIL", "")
-LINKEDIN_PASSWORD = os.getenv("LINKEDIN_PASSWORD", "")
-
 # AI platform: "ollama" (local) or "groq" (cloud). Drives all AI defaults below.
 PLATFORM = os.getenv("PLATFORM", "ollama").strip().lower()
 
@@ -73,6 +69,9 @@ AI_TRIAGE_FIRST = _env_bool("AI_TRIAGE_FIRST", False)
 # Per-request HTTP timeout (seconds).
 AI_REQUEST_TIMEOUT = _env_int("AI_REQUEST_TIMEOUT", _defaults["timeout"])
 AI_CONCURRENT_ANALYSES = _env_int("AI_CONCURRENT_ANALYSES", 3)
+AI_PROVIDER = os.getenv("AI_PROVIDER", "openai").strip().lower()
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-opus-4-8")
 QUEUE_CLAIM_BATCH_SIZE = _env_int("QUEUE_CLAIM_BATCH_SIZE", 6)
 NEXTJS_API_URL = os.getenv("NEXTJS_API_URL", "").strip()
 # When true, feed scrape skips hiring-keyword gate (more cards; use AI triage downstream).
@@ -99,7 +98,7 @@ CONTENT_SEARCH_QUERIES = [
 
     # --- Core primary skills (direct differentiators) ---
     "Flutter",
-    "Go (Golang)",
+    "Golang",
     "Next JS",
     "React JS",
     "AWS",
@@ -109,17 +108,16 @@ CONTENT_SEARCH_QUERIES = [
     # --- Role-signal phrases (what hiring posts actually say) ---
     "Mobile developer",
     "full stack developer",
-    "cloud engineer",
     "backend engineer Go",
 
     # --- Stack-specific depth signals ---
-    "Serverless Architecture",
-    "DynamoDB",
-    "AWS Lambda",
+    # "Serverless Architecture",
+    # "DynamoDB",
+    # "AWS Lambda",
 
     # --- AI / ML track (NVIDIA DLI certs, Masked R-CNN, BERT/TF-IDF) ---
-    "machine learning engineer",
-    "Python developer",
+    # "machine learning engineer",
+    # "Python developer",
 
     # --- Moderate relevance; uncomment if results are thin ---
     # "Golang backend",
@@ -142,18 +140,18 @@ CONTENT_SEARCH_QUERIES = [
 
 
 # Scraper settings
-FEED_SCROLL_COUNT = 8
-FEED_SCROLL_DELAY = 2  # seconds
-HASHTAG_SCROLL_COUNT = 3  # search results lazy-load; body scroll does not load more
-POSTS_PER_HASHTAG = 25  # max posts collected per hashtag OR per content query below
-ACTION_DELAY_MIN = 2  # seconds
-ACTION_DELAY_MAX = 3  # seconds
+FEED_SCROLL_COUNT = _env_int("FEED_SCROLL_COUNT", 8)
+FEED_SCROLL_DELAY = _env_float("FEED_SCROLL_DELAY", 2.0)
+HASHTAG_SCROLL_COUNT = _env_int("HASHTAG_SCROLL_COUNT", 3)
+POSTS_PER_HASHTAG = _env_int("POSTS_PER_HASHTAG", 25)
+ACTION_DELAY_MIN = _env_float("ACTION_DELAY_MIN", 2.0)
+ACTION_DELAY_MAX = _env_float("ACTION_DELAY_MAX", 3.0)
 
 # LinkedIn /search/results/content/ facet filters (JSON-like values, URL-encoded).
 # Example: datePosted=["past-week"] or '["past-24h"]'  contentType=["jobs"]
 # Set to "" to omit a filter.
 # contentType=["jobs"] shows LinkedIn job *listing* UI — not the post-card DOM this scraper targets.
-SEARCH_FILTER_DATE_POSTED = '["past-24h"]'
+SEARCH_FILTER_DATE_POSTED = os.getenv("SEARCH_FILTER_DATE_POSTED", '["past-24h"]').strip()
 SEARCH_FILTER_CONTENT_TYPE = os.getenv("SEARCH_FILTER_CONTENT_TYPE", "jobs").strip()
 
 

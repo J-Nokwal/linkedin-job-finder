@@ -6,7 +6,8 @@
 # ============================================================
 
 # ─── Environment (cron has a bare PATH, set it explicitly) ───
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$HOME/.local/bin"
+NVM_NODE_BIN=$(ls -d "$HOME"/.nvm/versions/node/*/bin 2>/dev/null | sort -V | tail -1)
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$HOME/.local/bin${NVM_NODE_BIN:+:$NVM_NODE_BIN}"
 export DISPLAY=:0
 export XAUTHORITY=$(ls /run/user/1000/.mutter-Xwaylandauth.* 2>/dev/null | head -1)
 

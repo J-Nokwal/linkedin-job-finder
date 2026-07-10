@@ -50,35 +50,36 @@ export async function POST(request: NextRequest) {
 
     let added = 0;
     let skipped = 0;
+    // Per-item results in input order so callers can zip with their post list.
+    const results: { queued: boolean; id?: string; activityUrn?: string | null }[] = [];
 
     for (const job of jobs) {
       const postText = job.post_text || "";
       const scrapedAt = parseScrapedAt(job.scraped_at);
+      const activityUrn = job.activity_urn || null;
 
-      const existingQueue = await prisma.applicationQueue.findFirst({
-        where: {
-          postText,
-          scrapedAt,
-        },
-      });
-
-      const existingApp = await prisma.application.findFirst({
-        where: {
-          postText,
-          scrapedAt,
-        },
-      });
+      // Prefer activityUrn lookup (exact, cross-run). Fall back to postText match.
+      let existingQueue, existingApp;
+      if (activityUrn) {
+        existingQueue = await prisma.applicationQueue.findFirst({ where: { activityUrn } });
+        existingApp   = await prisma.application.findUnique({ where: { activityUrn } });
+      } else {
+        existingQueue = await prisma.applicationQueue.findFirst({ where: { postText } });
+        existingApp   = await prisma.application.findFirst({ where: { postText } });
+      }
 
       if (existingQueue || existingApp) {
         skipped += 1;
+        results.push({ queued: false, activityUrn });
         continue;
       }
 
-      await prisma.applicationQueue.create({
+      const created = await prisma.applicationQueue.create({
         data: {
           payload: JSON.stringify(job),
           postText,
           scrapedAt,
+          activityUrn,
           source: job.source,
           postUrl: job.post_url,
           status: "pending",
@@ -86,12 +87,14 @@ export async function POST(request: NextRequest) {
       });
 
       added += 1;
+      results.push({ queued: true, id: created.id, activityUrn });
     }
 
     return NextResponse.json({
       success: true,
       added,
       skipped,
+      results,
     });
   } catch (error) {
     console.error("Error enqueuing jobs:", error);

@@ -24,7 +24,7 @@ model Application {
   linkedinProfileUrls     String?
   hashtagsInText          String?
   scrapedAt               DateTime
-  activityUrn             String?
+  activityUrn             String?  @unique
   postKind                String?
   jobRelevance            Int?
   isFit                   Boolean  @default(false)
@@ -57,6 +57,7 @@ model ApplicationQueue {
   payload      Json
   postText     String
   scrapedAt    DateTime
+  activityUrn  String?
   source       String?
   postUrl      String?
   status       String   @default("pending")

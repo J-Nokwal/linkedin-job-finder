@@ -114,7 +114,7 @@ class LinkedInScraper:
         print("[SCRAPER] Browser launched successfully")
 
     def login(self):
-        """Check if logged in, if not perform login."""
+        """Navigate to LinkedIn and wait for the user to log in manually."""
         print("[SCRAPER] Checking LinkedIn login status...")
         self.page.goto("https://www.linkedin.com/", timeout=30000)
         self.page.wait_for_load_state("domcontentloaded")
@@ -124,58 +124,37 @@ class LinkedInScraper:
             print("[SCRAPER] Already logged in, session preserved")
             return
 
-        print("[SCRAPER] Not logged in, performing login...")
-
         self.page.goto("https://www.linkedin.com/login", timeout=30000)
         self.page.wait_for_load_state("domcontentloaded")
-        time.sleep(3)
 
-        # Check if we got redirected away from login page (already logged in)
-        if not self._is_on_login_page():
-            print("[SCRAPER] Redirected from login page, re-checking login status...")
-            if self._is_logged_in():
-                print("[SCRAPER] Actually logged in, session preserved")
+        log.alert(
+            "Manual Login Required",
+            [
+                "Please log in to LinkedIn in the browser window that just opened.",
+                "Complete any 2FA or verification steps as prompted.",
+                "The scraper will continue automatically once you are logged in.",
+                "Press [bold]ENTER[/bold] to skip the wait (not recommended).",
+            ],
+            style="yellow",
+        )
+
+        import select as _select
+        timeout = 300
+        deadline = time.time() + timeout
+        interval = 3
+        while time.time() < deadline:
+            if _select.select([sys.stdin], [], [], 0)[0]:
+                sys.stdin.readline()
+                log.warning("Manual skip — proceeding without confirmed login.")
                 return
-            # If still not logged in, we have a real problem
-            print("[SCRAPER] ERROR: Not on login page and not logged in")
-            self._save_screenshot("login_page_error")
-            raise Exception("Cannot reach LinkedIn login page")
-
-        try:
-            # LinkedIn now uses dynamic React IDs — select by type/autocomplete instead.
-            email_input = self.page.locator(
-                'input[type="email"]:visible, input[autocomplete*="username"]:visible'
-            ).first
-            email_input.wait_for(state="visible", timeout=15000)
-            email_input.fill(config.LINKEDIN_EMAIL)
-            time.sleep(random.uniform(config.ACTION_DELAY_MIN, config.ACTION_DELAY_MAX))
-
-            password_input = self.page.locator(
-                'input[type="password"]:visible, input[autocomplete="current-password"]:visible'
-            ).first
-            password_input.wait_for(state="visible", timeout=10000)
-            password_input.fill(config.LINKEDIN_PASSWORD)
-            time.sleep(random.uniform(config.ACTION_DELAY_MIN, config.ACTION_DELAY_MAX))
-
-            # LinkedIn uses type="button" not type="submit"; match by visible text.
-            import re as _re
-            self.page.locator("button:visible").filter(
-                has_text=_re.compile(r"^Sign in$")
-            ).click()
-            self.page.wait_for_load_state("domcontentloaded")
-            time.sleep(2)
-
-            self._check_verification()
-
             if self._is_logged_in():
-                print("[SCRAPER] Login successful")
-            else:
-                print("[SCRAPER] Login may have failed, please check manually")
+                log.success("Login detected — continuing.")
+                return
+            time.sleep(interval)
+            remaining = int(deadline - time.time())
+            log.info(f"Waiting for manual login… ({remaining}s left)")
 
-        except Exception as e:
-            print(f"[SCRAPER] ERROR during login: {e}")
-            self._save_screenshot("login_error")
-            raise
+        log.warning("Login wait timeout (300s) — continuing anyway.")
 
     def _auth_blocked_url(self) -> bool:
         u = (self.page.url or "").lower()
@@ -952,7 +931,7 @@ class LinkedInScraper:
                 aid = self._activity_id_from_href(href)
                 if aid:
                     if aid.startswith('ugc:'):
-                        return f'urn:li:{aid}'
+                        return f'urn:li:ugcPost:{aid[4:]}'
                     return f'urn:li:activity:{aid}'
         except Exception:
             pass
@@ -1422,18 +1401,6 @@ class LinkedInScraper:
                 print(f"[SCRAPER] Error stopping Playwright: {e}")
             finally:
                 self._playwright = None
-
-    def _dedupe_posts_buffer(self) -> None:
-        """Deduplicate self.posts by hash of first 200 chars of post_text."""
-        unique_posts: List[Dict[str, Any]] = []
-        seen_texts = set()
-        for post in self.posts:
-            text_key = (post.get("post_text") or "")[:200]
-            text_hash = hash(text_key)
-            if text_hash not in seen_texts:
-                seen_texts.add(text_hash)
-                unique_posts.append(post)
-        self.posts = unique_posts
 
     def run(self) -> Generator[Dict[str, Any], None, None]:
         """Run full scraping process."""

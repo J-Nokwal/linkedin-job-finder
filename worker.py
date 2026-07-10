@@ -122,11 +122,16 @@ def main():
     batch_size = max(1, args.batch_size)
     ai_timeout = args.ai_timeout if args.ai_timeout is not None else config.AI_REQUEST_TIMEOUT
 
-    log.banner("LinkedIn Job Queue Worker", f"Platform: {config.PLATFORM.upper()}")
+    log.banner("LinkedIn Job Queue Worker", f"Provider: {config.AI_PROVIDER.upper()}")
 
     log.rule("Configuration")
-    log.kv("Model",           config.OPENAI_MODEL)
-    log.kv("Base URL",        config.OPENAI_BASE_URL)
+    log.kv("Provider",        config.AI_PROVIDER.upper())
+    if config.AI_PROVIDER == "claude":
+        log.kv("Model",       config.CLAUDE_MODEL or "claude (default)")
+        log.kv("Auth",        "API key" if config.ANTHROPIC_API_KEY else "Claude Code subscription")
+    else:
+        log.kv("Model",       config.OPENAI_MODEL)
+        log.kv("Base URL",    config.OPENAI_BASE_URL)
     log.kv("Request timeout", f"{ai_timeout}s")
     log.kv("Min relevance",   str(min_rel))
     log.kv("Batch size",      str(batch_size))

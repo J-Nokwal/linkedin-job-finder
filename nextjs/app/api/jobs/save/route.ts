@@ -77,19 +77,30 @@ export async function POST(request: NextRequest) {
     // Handle both single job and array of jobs
     const jobs: LinkedInJob[] = Array.isArray(body) ? body : [body];
 
-    const createdJobs = [];
+    const savedJobs = [];
+    let createdCount = 0;
+    let skipped = 0;
 
     for (const job of jobs) {
-      // Parse date_posted if it exists
+      // Cross-run dedup: skip if this activityUrn already exists in the database.
+      if (job.activity_urn) {
+        const existing = await prisma.application.findUnique({
+          where: { activityUrn: job.activity_urn },
+        });
+        if (existing) {
+          skipped++;
+          savedJobs.push(existing);
+          continue;
+        }
+      }
+
       const datePosted = parseDate(job.date_posted);
       const scrapedAt = parseScrapedAt(job.scraped_at);
-
-      // Extract URLs from links
       const externalUrls = extractExternalUrls(job.links || []);
       const linkedinJobUrls = extractLinkedInJobUrls(job.links || []);
       const linkedinProfileUrls = extractLinkedInProfileUrls(job.links || []);
 
-      const created = await prisma.application.create({
+      const record = await prisma.application.create({
         data: {
           postText: job.post_text || "",
           authorName: job.author_name,
@@ -103,7 +114,7 @@ export async function POST(request: NextRequest) {
           linkedinProfileUrls: JSON.stringify(linkedinProfileUrls),
           hashtagsInText: JSON.stringify(job.hashtags_in_text || []),
           scrapedAt,
-          activityUrn: job.activity_urn,
+          activityUrn: job.activity_urn || null,
           postKind: job.post_kind,
           jobRelevance: job.job_relevance_0_100,
           isFit: job.is_fit || false,
@@ -126,13 +137,16 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      createdJobs.push(created);
+      createdCount++;
+      savedJobs.push(record);
     }
 
     return NextResponse.json({
       success: true,
-      count: createdJobs.length,
-      jobs: createdJobs,
+      created: createdCount,
+      skipped,
+      count: savedJobs.length,
+      jobs: savedJobs,
     });
   } catch (error) {
     console.error("Error saving jobs:", error);

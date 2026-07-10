@@ -38,6 +38,7 @@ export type ApplicationQueueMinAggregateOutputType = {
   id: string | null
   postText: string | null
   scrapedAt: Date | null
+  activityUrn: string | null
   source: string | null
   postUrl: string | null
   status: string | null
@@ -55,6 +56,7 @@ export type ApplicationQueueMaxAggregateOutputType = {
   id: string | null
   postText: string | null
   scrapedAt: Date | null
+  activityUrn: string | null
   source: string | null
   postUrl: string | null
   status: string | null
@@ -73,6 +75,7 @@ export type ApplicationQueueCountAggregateOutputType = {
   payload: number
   postText: number
   scrapedAt: number
+  activityUrn: number
   source: number
   postUrl: number
   status: number
@@ -100,6 +103,7 @@ export type ApplicationQueueMinAggregateInputType = {
   id?: true
   postText?: true
   scrapedAt?: true
+  activityUrn?: true
   source?: true
   postUrl?: true
   status?: true
@@ -117,6 +121,7 @@ export type ApplicationQueueMaxAggregateInputType = {
   id?: true
   postText?: true
   scrapedAt?: true
+  activityUrn?: true
   source?: true
   postUrl?: true
   status?: true
@@ -135,6 +140,7 @@ export type ApplicationQueueCountAggregateInputType = {
   payload?: true
   postText?: true
   scrapedAt?: true
+  activityUrn?: true
   source?: true
   postUrl?: true
   status?: true
@@ -240,6 +246,7 @@ export type ApplicationQueueGroupByOutputType = {
   payload: runtime.JsonValue
   postText: string
   scrapedAt: Date
+  activityUrn: string | null
   source: string | null
   postUrl: string | null
   status: string
@@ -281,6 +288,7 @@ export type ApplicationQueueWhereInput = {
   payload?: Prisma.JsonFilter<"ApplicationQueue">
   postText?: Prisma.StringFilter<"ApplicationQueue"> | string
   scrapedAt?: Prisma.DateTimeFilter<"ApplicationQueue"> | Date | string
+  activityUrn?: Prisma.StringNullableFilter<"ApplicationQueue"> | string | null
   source?: Prisma.StringNullableFilter<"ApplicationQueue"> | string | null
   postUrl?: Prisma.StringNullableFilter<"ApplicationQueue"> | string | null
   status?: Prisma.StringFilter<"ApplicationQueue"> | string
@@ -299,6 +307,7 @@ export type ApplicationQueueOrderByWithRelationInput = {
   payload?: Prisma.SortOrder
   postText?: Prisma.SortOrder
   scrapedAt?: Prisma.SortOrder
+  activityUrn?: Prisma.SortOrderInput | Prisma.SortOrder
   source?: Prisma.SortOrderInput | Prisma.SortOrder
   postUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -320,6 +329,7 @@ export type ApplicationQueueWhereUniqueInput = Prisma.AtLeast<{
   payload?: Prisma.JsonFilter<"ApplicationQueue">
   postText?: Prisma.StringFilter<"ApplicationQueue"> | string
   scrapedAt?: Prisma.DateTimeFilter<"ApplicationQueue"> | Date | string
+  activityUrn?: Prisma.StringNullableFilter<"ApplicationQueue"> | string | null
   source?: Prisma.StringNullableFilter<"ApplicationQueue"> | string | null
   postUrl?: Prisma.StringNullableFilter<"ApplicationQueue"> | string | null
   status?: Prisma.StringFilter<"ApplicationQueue"> | string
@@ -338,6 +348,7 @@ export type ApplicationQueueOrderByWithAggregationInput = {
   payload?: Prisma.SortOrder
   postText?: Prisma.SortOrder
   scrapedAt?: Prisma.SortOrder
+  activityUrn?: Prisma.SortOrderInput | Prisma.SortOrder
   source?: Prisma.SortOrderInput | Prisma.SortOrder
   postUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -364,6 +375,7 @@ export type ApplicationQueueScalarWhereWithAggregatesInput = {
   payload?: Prisma.JsonWithAggregatesFilter<"ApplicationQueue">
   postText?: Prisma.StringWithAggregatesFilter<"ApplicationQueue"> | string
   scrapedAt?: Prisma.DateTimeWithAggregatesFilter<"ApplicationQueue"> | Date | string
+  activityUrn?: Prisma.StringNullableWithAggregatesFilter<"ApplicationQueue"> | string | null
   source?: Prisma.StringNullableWithAggregatesFilter<"ApplicationQueue"> | string | null
   postUrl?: Prisma.StringNullableWithAggregatesFilter<"ApplicationQueue"> | string | null
   status?: Prisma.StringWithAggregatesFilter<"ApplicationQueue"> | string
@@ -382,6 +394,7 @@ export type ApplicationQueueCreateInput = {
   payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
   postText: string
   scrapedAt: Date | string
+  activityUrn?: string | null
   source?: string | null
   postUrl?: string | null
   status?: string
@@ -400,6 +413,7 @@ export type ApplicationQueueUncheckedCreateInput = {
   payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
   postText: string
   scrapedAt: Date | string
+  activityUrn?: string | null
   source?: string | null
   postUrl?: string | null
   status?: string
@@ -418,6 +432,7 @@ export type ApplicationQueueUpdateInput = {
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   postText?: Prisma.StringFieldUpdateOperationsInput | string
   scrapedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  activityUrn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   postUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -436,6 +451,7 @@ export type ApplicationQueueUncheckedUpdateInput = {
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   postText?: Prisma.StringFieldUpdateOperationsInput | string
   scrapedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  activityUrn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   postUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -454,6 +470,7 @@ export type ApplicationQueueCreateManyInput = {
   payload: Prisma.JsonNullValueInput | runtime.InputJsonValue
   postText: string
   scrapedAt: Date | string
+  activityUrn?: string | null
   source?: string | null
   postUrl?: string | null
   status?: string
@@ -472,6 +489,7 @@ export type ApplicationQueueUpdateManyMutationInput = {
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   postText?: Prisma.StringFieldUpdateOperationsInput | string
   scrapedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  activityUrn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   postUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -490,6 +508,7 @@ export type ApplicationQueueUncheckedUpdateManyInput = {
   payload?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   postText?: Prisma.StringFieldUpdateOperationsInput | string
   scrapedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  activityUrn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   postUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -508,6 +527,7 @@ export type ApplicationQueueCountOrderByAggregateInput = {
   payload?: Prisma.SortOrder
   postText?: Prisma.SortOrder
   scrapedAt?: Prisma.SortOrder
+  activityUrn?: Prisma.SortOrder
   source?: Prisma.SortOrder
   postUrl?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -529,6 +549,7 @@ export type ApplicationQueueMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   postText?: Prisma.SortOrder
   scrapedAt?: Prisma.SortOrder
+  activityUrn?: Prisma.SortOrder
   source?: Prisma.SortOrder
   postUrl?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -546,6 +567,7 @@ export type ApplicationQueueMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   postText?: Prisma.SortOrder
   scrapedAt?: Prisma.SortOrder
+  activityUrn?: Prisma.SortOrder
   source?: Prisma.SortOrder
   postUrl?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -570,6 +592,7 @@ export type ApplicationQueueSelect<ExtArgs extends runtime.Types.Extensions.Inte
   payload?: boolean
   postText?: boolean
   scrapedAt?: boolean
+  activityUrn?: boolean
   source?: boolean
   postUrl?: boolean
   status?: boolean
@@ -588,6 +611,7 @@ export type ApplicationQueueSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   payload?: boolean
   postText?: boolean
   scrapedAt?: boolean
+  activityUrn?: boolean
   source?: boolean
   postUrl?: boolean
   status?: boolean
@@ -606,6 +630,7 @@ export type ApplicationQueueSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   payload?: boolean
   postText?: boolean
   scrapedAt?: boolean
+  activityUrn?: boolean
   source?: boolean
   postUrl?: boolean
   status?: boolean
@@ -624,6 +649,7 @@ export type ApplicationQueueSelectScalar = {
   payload?: boolean
   postText?: boolean
   scrapedAt?: boolean
+  activityUrn?: boolean
   source?: boolean
   postUrl?: boolean
   status?: boolean
@@ -637,7 +663,7 @@ export type ApplicationQueueSelectScalar = {
   updatedAt?: boolean
 }
 
-export type ApplicationQueueOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "payload" | "postText" | "scrapedAt" | "source" | "postUrl" | "status" | "attemptCount" | "workerId" | "lockedAt" | "processedAt" | "appId" | "errorMessage" | "createdAt" | "updatedAt", ExtArgs["result"]["applicationQueue"]>
+export type ApplicationQueueOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "payload" | "postText" | "scrapedAt" | "activityUrn" | "source" | "postUrl" | "status" | "attemptCount" | "workerId" | "lockedAt" | "processedAt" | "appId" | "errorMessage" | "createdAt" | "updatedAt", ExtArgs["result"]["applicationQueue"]>
 
 export type $ApplicationQueuePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "ApplicationQueue"
@@ -647,6 +673,7 @@ export type $ApplicationQueuePayload<ExtArgs extends runtime.Types.Extensions.In
     payload: runtime.JsonValue
     postText: string
     scrapedAt: Date
+    activityUrn: string | null
     source: string | null
     postUrl: string | null
     status: string
@@ -1085,6 +1112,7 @@ export interface ApplicationQueueFieldRefs {
   readonly payload: Prisma.FieldRef<"ApplicationQueue", 'Json'>
   readonly postText: Prisma.FieldRef<"ApplicationQueue", 'String'>
   readonly scrapedAt: Prisma.FieldRef<"ApplicationQueue", 'DateTime'>
+  readonly activityUrn: Prisma.FieldRef<"ApplicationQueue", 'String'>
   readonly source: Prisma.FieldRef<"ApplicationQueue", 'String'>
   readonly postUrl: Prisma.FieldRef<"ApplicationQueue", 'String'>
   readonly status: Prisma.FieldRef<"ApplicationQueue", 'String'>

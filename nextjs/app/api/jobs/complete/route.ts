@@ -92,16 +92,21 @@ export async function POST(request: NextRequest) {
     const postText = analyzedJob.post_text || "";
     const scrapedAt = parseScrapedAt(analyzedJob.scraped_at);
     const datePosted = parseDate(analyzedJob.date_posted);
-    const externalUrls = extractExternalUrls(analyzedJob.links || analyzedJob.external_urls || [] as any);
-    const linkedinJobUrls = extractLinkedInJobUrls(analyzedJob.links || analyzedJob.linkedin_job_urls || [] as any);
-    const linkedinProfileUrls = extractLinkedInProfileUrls(analyzedJob.links || analyzedJob.linkedin_profile_urls || [] as any);
+    const externalUrls = analyzedJob.links
+      ? extractExternalUrls(analyzedJob.links)
+      : (analyzedJob.external_urls || []);
+    const linkedinJobUrls = analyzedJob.links
+      ? extractLinkedInJobUrls(analyzedJob.links)
+      : (analyzedJob.linkedin_job_urls || []);
+    const linkedinProfileUrls = analyzedJob.links
+      ? extractLinkedInProfileUrls(analyzedJob.links)
+      : (analyzedJob.linkedin_profile_urls || []);
 
-    let application = await prisma.application.findFirst({
-      where: {
-        postText,
-        scrapedAt,
-      },
-    });
+    // Prefer activityUrn lookup (unique); fall back to postText match.
+    const activityUrn = analyzedJob.activity_urn || null;
+    let application = activityUrn
+      ? await prisma.application.findUnique({ where: { activityUrn } })
+      : await prisma.application.findFirst({ where: { postText } });
 
     if (!application) {
       application = await prisma.application.create({
@@ -118,7 +123,7 @@ export async function POST(request: NextRequest) {
           linkedinProfileUrls: JSON.stringify(linkedinProfileUrls),
           hashtagsInText: JSON.stringify(analyzedJob.hashtags_in_text || []),
           scrapedAt,
-          activityUrn: analyzedJob.activity_urn,
+          activityUrn: analyzedJob.activity_urn || null,
           postKind: analyzedJob.post_kind,
           jobRelevance: analyzedJob.job_relevance_0_100,
           isFit: analyzedJob.is_fit || false,
